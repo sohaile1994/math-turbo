@@ -1,6 +1,42 @@
 export const Operation = {
-	ADD: "+",
-	SUBTRACT: "-",
-	MULTIPLY: "x",
-	DIVIDE: "/",
+  ADD: "+",
+  SUBTRACT: "-",
+  MULTIPLY: "×",
+  DIVIDE: "÷",
+};
+
+export const Category = {
+  COUNTING: "counting",
+  ARITHMETIC: "arithmetic",
+  PEMDAS: "pemdas",
+  EXPONENTS: "exponents",
+  ALGEBRA: "algebra",
+};
+
+export const GameMode = {
+  PRACTICE: "practice",
+  ENDLESS: "endless",
+};
+
+export const Screen = {
+  MAIN_MENU: "main_menu",
+  GAME: "game",
+  GAME_OVER: "game_over",
+};
+
+export const GradeLevel = {
+  D: "D",
+  C: "C",
+  B: "B",
+  A: "A",
+  S: "S",
+  SS: "SS",
+  SSS: "SSS",
+};
+
+export const BoosterType = {
+  GRADE_FREEZE: "grade_freeze",
+  EXTRA_LIFE: "extra_life",
+  SCORE_BOOST: "score_boost",
+  DOUBLE_COMBO: "double_combo",
 };

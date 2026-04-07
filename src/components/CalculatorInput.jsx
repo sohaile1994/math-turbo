@@ -1,92 +1,72 @@
 import { useRef } from "react";
 import { useAnswer } from "../context/AnswerContext";
 
+const DIGIT_ROWS = [
+  ["7", "8", "9"],
+  ["4", "5", "6"],
+  ["1", "2", "3"],
+  ["-", "0", "."],
+];
 
 export default function CalculatorInput() {
-  const { answer, setAnswer, submit, feedback } = useAnswer();
+  const { answer, setAnswer, submit, locked } = useAnswer();
   const lastPressTime = useRef(0);
-  const delay = 100; // 0.1s throttle
-
-  const acceptInput = feedback !== "wrong";
+  const THROTTLE = 80;
 
   const press = (val) => {
-    if (!acceptInput) return;
-
+    if (locked) return;
     const now = Date.now();
-    if (now - lastPressTime.current < delay) return;
+    if (now - lastPressTime.current < THROTTLE) return;
     lastPressTime.current = now;
-
     setAnswer(prev => prev + val);
   };
 
-  const clear = () => {
-    if (!acceptInput) return;
-    setAnswer("");
-  };
-
   const back = () => {
-    if (!acceptInput) return;
+    if (locked) return;
     setAnswer(prev => prev.slice(0, -1));
   };
 
   const handleSubmit = () => {
-    if (!acceptInput || !answer) return; // prevent empty submit
+    if (locked || !answer) return;
     submit();
   };
 
-  const buttons = [
-    "1","2","3",
-    "4","5","6",
-    "7","8","9", "-",
-    "0", "  ",
-  ];
+  const disabled = locked;
 
   return (
     <div className="calc">
-      <div className="calc-grid">
-
-        {/* Submit button at the top, spanning 2 columns */}
-          <div
-             className="calc-key back-key"
-             onClick={back}
-             style={{
-               opacity: acceptInput ? 1 : 0.5,
-               pointerEvents: acceptInput ? "auto" : "none"
-             }}
-           >
-             <p>⌫</p>
-           </div>
-        <div
+      {/* Action row */}
+      <div className="calc-action-row">
+        <button
+          className="calc-key back-key"
+          onClick={back}
+          disabled={disabled}
+        >
+          ⌫
+        </button>
+        <button
           className="calc-key submit-key"
           onClick={handleSubmit}
-          style={{
-            gridColumn: "span 2",
-            opacity: acceptInput ? 1 : 0.5,
-            pointerEvents: acceptInput ? "auto" : "none"
-          }}
+          disabled={disabled}
         >
-          <p>SUBMIT</p>
-        </div>
+          ENTER
+        </button>
+      </div>
 
-        {/* Clear button top-right */}
-
-        {/* Number buttons */}
-        {buttons.map(b => (
-          <div
-            key={b}
-            className="calc-key"
-            onClick={() => press(b)}
-            style={{
-              opacity: acceptInput ? 1 : 0.5,
-              pointerEvents: acceptInput ? "auto" : "none"
-            }}
-          >
-            <p>{b}</p>
-          </div>
-        ))}
-
-        {/* Back button at the bottom-right */}
-        
+      {/* Number pad */}
+      <div className="calc-grid">
+        {DIGIT_ROWS.map((row) =>
+          row.map((key) => (
+            <button
+              key={key}
+              className="calc-key"
+              onClick={() => press(key)}
+              disabled={disabled}
+            >
+              {key}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,68 +1,35 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { useMenu } from "./MenuContext";
-import { Operation } from "../enums";
+import { createContext, useContext, useState, useCallback } from "react";
+import { Category } from "../enums";
+import {
+  generateCounting,
+  generateArithmetic,
+  generatePEMDAS,
+  generateExponent,
+  generateAlgebra,
+} from "../generators";
 
 const ProblemContext = createContext();
 
-function rand(min, max, allowNeg) {
-  let n = Math.floor(Math.random() * (max - min + 1)) + min;
-  if (allowNeg && Math.random() > 0.5) n *= -1;
-  return n;
-}
-
-function generate(cfg) {
-  let a = rand(cfg.min, cfg.max, cfg.allowNegatives);
-  let b = rand(cfg.min, cfg.max, cfg.allowNegatives);
-
-if (cfg.operator === Operation.SUBTRACT) {
-  if (a < b) {
-    const temp = a;
-    a = b;
-    b = temp;
-  }
-}
-  if (cfg.operator === Operation.DIVIDE) {
-    b = Math.max(1, Math.abs(b));
-    const result = rand(cfg.min, cfg.max, cfg.allowNegatives);
-    a = b * result;
-  }
-
-  return { a, b, op: cfg.operator };
-}
-
-function solve({ a, b, op }) {
-  switch (op) {
-    case Operation.ADD: return a + b;
-    case Operation.SUBTRACT: return a - b;
-    case Operation.MULTIPLY: return a * b;
-    case Operation.DIVIDE: return a / b;
-    default: return 0;
+function generateProblem(category) {
+  switch (category) {
+    case Category.COUNTING:   return generateCounting();
+    case Category.ARITHMETIC: return generateArithmetic();
+    case Category.PEMDAS:     return generatePEMDAS();
+    case Category.EXPONENTS:  return generateExponent();
+    case Category.ALGEBRA:    return generateAlgebra();
+    default:                  return generateArithmetic();
   }
 }
 
-export const ProblemProvider = ({ children }) => {
-  const { config } = useMenu();
-  const [problem, setProblem] = useState(() => generate(config));
+export const ProblemProvider = ({ children, category }) => {
+  const [problem, setProblem] = useState(() => generateProblem(category));
 
-  const nextProblem = () => setProblem(generate(config));
-
-  // ⭐ NEW — single source of truth
-  const getCorrectAnswer = () => solve(problem);
-
-  const checkAnswer = val =>
-    Number(val) === getCorrectAnswer();
-
-  useEffect(() => {
-    nextProblem();
-  }, [config]);
+  const nextProblem = useCallback(() => {
+    setProblem(generateProblem(category));
+  }, [category]);
 
   return (
-    <ProblemContext.Provider value={{
-      problem,
-      nextProblem,
-      checkAnswer,
-      getCorrectAnswer   // ← expose this
-    }}>
+    <ProblemContext.Provider value={{ problem, nextProblem }}>
       {children}
     </ProblemContext.Provider>
   );

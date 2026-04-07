@@ -1,31 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAnswer } from "../context/AnswerContext";
-import { useMenu } from "../context/MenuContext";
-
 
 export default function AnswerInput() {
-  const { answer, setAnswer, submit, feedback } = useAnswer();
-const { isMenuOpen } = useMenu();
-
+  const { answer, setAnswer, submit, locked } = useAnswer();
   const lastKeyTime = useRef(0);
-  const delay = 100; // 0.1 seconds
-  const [acceptInput, setAcceptInput] = useState(true);
-
-  // Only disable input when feedback === "wrong" (second wrong attempt)
-  useEffect(() => {
-    if (feedback === "wrong") {
-      setAcceptInput(false);
-      const timeout = setTimeout(() => setAcceptInput(true), 2000); // 2s disable
-      return () => clearTimeout(timeout);
-    }
-  }, [feedback]);
+  const THROTTLE = 80;
 
   useEffect(() => {
     const handleKey = (e) => {
-    if (!acceptInput || isMenuOpen) return;
+      if (locked) return;
 
       const now = Date.now();
-      if (now - lastKeyTime.current < delay) return; // throttle
+      if (now - lastKeyTime.current < THROTTLE) return;
       lastKeyTime.current = now;
 
       if (e.key === "Enter") {
@@ -33,8 +19,9 @@ const { isMenuOpen } = useMenu();
         return;
       }
 
-      if (/^[0-9.]$/.test(e.key)) {
-        e.preventDefault(); // prevent input onChange double trigger
+      // Allow digits, minus sign, decimal point
+      if (/^[0-9.\-]$/.test(e.key)) {
+        e.preventDefault();
         setAnswer(prev => prev + e.key);
         return;
       }
@@ -42,24 +29,23 @@ const { isMenuOpen } = useMenu();
       if (e.key === "Backspace") {
         e.preventDefault();
         setAnswer(prev => prev.slice(0, -1));
-        return;
       }
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [submit, setAnswer, acceptInput]);
+  }, [submit, setAnswer, locked]);
 
   return (
     <div className="answer-row">
       <input
         className="answer-input"
         value={answer}
-        onChange={e => acceptInput && setAnswer(e.target.value)}
-        disabled={!acceptInput}
-        style={{ textAlign: "right" }}
+        onChange={e => !locked && setAnswer(e.target.value)}
+        disabled={locked}
+        placeholder="?"
+        style={{ textAlign: "center" }}
       />
-     
     </div>
   );
 }

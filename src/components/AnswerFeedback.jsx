@@ -1,26 +1,30 @@
 import { useAnswer } from "../context/AnswerContext";
 
 export default function AnswerFeedback() {
-  const { feedback, correctAnswer, lastProblem } = useAnswer();
+  const { feedback, correctAnswerStr, pointsEarned, boosterAwarded } = useAnswer();
 
   return (
-    <div className="feedback">
+    <div className="feedback-area">
       {feedback === "correct" && (
-        <div className="correct">✅ Correct!</div>
-      )}
-
-      {feedback === "retry" && (
-        <div className="retry">⚠ Try Again!</div>
-      )}
-
-      {feedback === "wrong" && lastProblem && (
-        <div className="wrong">
-          ❌ {lastProblem.a} {lastProblem.op} {lastProblem.b} = {correctAnswer}
+        <div className="feedback correct-fb">
+          ✅ Correct!
+          {pointsEarned != null && (
+            <span className="points-earned"> +{pointsEarned} pts</span>
+          )}
         </div>
       )}
 
-      {/* blank placeholder to keep layout consistent */}
-      {!feedback && <div>&nbsp;</div>}
+      {feedback === "retry" && (
+        <div className="feedback retry-fb">⚠️ Try again!</div>
+      )}
+
+      {feedback === "wrong" && (
+        <div className="feedback wrong-fb">
+          ❌ Answer: <strong>{correctAnswerStr}</strong>
+        </div>
+      )}
+
+      {!feedback && <div className="feedback-placeholder">&nbsp;</div>}
     </div>
   );
 }
