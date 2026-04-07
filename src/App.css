@@ -604,6 +604,147 @@ button {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SETTINGS PANEL
+═══════════════════════════════════════════════════════════════ */
+.settings-btn {
+  background: transparent;
+  border: 2px solid #2a3cff55;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.settings-btn:hover {
+  background: rgba(0,229,255,0.1);
+  border-color: #00e5ff;
+}
+
+.settings-panel {
+  background: linear-gradient(145deg, #0d1540, #060b28);
+  border: 2px solid #00e5ff66;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 0 20px #00e5ff22;
+  animation: fadeIn 0.2s ease;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  color: #00e5ff;
+}
+.settings-close {
+  background: transparent;
+  border: 1px solid #ff4d4d44;
+  color: #ff4d4d;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.65rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.5rem;
+  color: #aaa;
+  white-space: nowrap;
+}
+
+.op-toggle-group {
+  display: flex;
+  gap: 6px;
+}
+
+.op-toggle-btn {
+  background: #0d1540;
+  border: 2px solid #2a3cff55;
+  border-radius: 8px;
+  color: #aaa;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  min-width: 38px;
+}
+.op-toggle-btn:hover {
+  border-color: #00e5ff88;
+  color: #fff;
+}
+.op-toggle-btn.active {
+  background: rgba(0,229,255,0.15);
+  border-color: #00e5ff;
+  color: #00e5ff;
+  box-shadow: 0 0 10px #00e5ff44;
+}
+
+.toggle-pill {
+  background: #0d1540;
+  border: 2px solid #2a3cff55;
+  border-radius: 50px;
+  color: #aaa;
+  padding: 5px 18px;
+  font-size: 0.55rem;
+  font-family: "Press Start 2P", monospace;
+  transition: all 0.15s ease;
+}
+.toggle-pill.active {
+  background: rgba(0,255,136,0.1);
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 10px #00ff8844;
+}
+
+/* ── Scientific notation specific styles ── */
+.sci-expr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+}
+.sci-term {
+  display: inline-flex;
+  align-items: baseline;
+  font-weight: 900;
+  gap: 1px;
+}
+.sci-op {
+  color: #00e5ff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 4px;
+}
+.sci-unknown {
+  color: #ff6600 !important;
+  font-size: 1.1rem !important;
+}
+.rule-hint {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.5rem;
+  color: #aaa;
+  text-align: center;
+}
+.exp-term {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    GAME OVER SCREEN
 ═══════════════════════════════════════════════════════════════ */
 .game-over-screen {
