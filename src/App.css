@@ -1,21 +1,40 @@
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL
+   FONTS & GLOBAL
 ═══════════════════════════════════════════════════════════════ */
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap");
+
+:root {
+  --pink:    #FF6B9D;
+  --orange:  #FF8E53;
+  --yellow:  #FFD93D;
+  --green:   #6BCB77;
+  --teal:    #4ECDC4;
+  --blue:    #4D96FF;
+  --purple:  #A78BFA;
+  --white:   #FFFFFF;
+  --bg:      #F0F4FF;
+  --card-bg: #FFFFFF;
+  --text:    #1E1B4B;
+  --muted:   #6B7280;
+  --shadow:  0 4px 24px rgba(0,0,0,0.08);
+}
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse at top, #1a2a8c 0%, #0b0f2b 70%);
-  background-attachment: fixed;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(167,139,250,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(78,205,196,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255,107,157,0.08) 0%, transparent 60%);
   font-family: "Nunito", sans-serif;
-  color: #fff;
+  color: var(--text);
   min-height: 100dvh;
   overflow-x: hidden;
 }
 
 button {
   cursor: pointer;
-  font-family: "Press Start 2P", monospace;
+  font-family: "Fredoka One", sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -24,7 +43,7 @@ button {
 .game-container {
   max-width: 640px;
   margin: 0 auto;
-  padding: 16px 12px 24px;
+  padding: 16px 14px 32px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -36,152 +55,177 @@ button {
 .main-menu {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: fadeIn 0.4s ease;
+  gap: 28px;
+  animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.menu-title {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(1.4rem, 5vw, 2.4rem);
+/* Hero */
+.menu-hero {
+  position: relative;
   text-align: center;
-  line-height: 1.4;
-  margin: 8px 0 0;
+  padding: 32px 0 8px;
 }
-.title-math    { color: #00e5ff; text-shadow: 0 0 20px #00e5ff; }
-.title-blaster { color: #ff00cc; text-shadow: 0 0 20px #ff00cc; }
+
+.hero-decoration {
+  position: absolute;
+  font-size: 1.6rem;
+  animation: float 3s ease-in-out infinite;
+  opacity: 0.4;
+  user-select: none;
+}
+.hero-dec-1 { top: 10px; left: 8%;  color: var(--yellow);  animation-delay: 0s;    animation-duration: 3.2s; }
+.hero-dec-2 { top: 20px; right: 10%; color: var(--pink);   animation-delay: 0.8s;  animation-duration: 2.8s; }
+.hero-dec-3 { bottom: 0; left: 20%; color: var(--teal);   animation-delay: 0.4s;  animation-duration: 3.5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(15deg); }
+}
+
+.menu-title {
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(2.6rem, 9vw, 4rem);
+  line-height: 1.05;
+  margin: 0 0 10px;
+  display: block;
+}
+.title-math {
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(167,139,250,0.4));
+}
+.title-blaster {
+  background: linear-gradient(135deg, var(--pink), var(--orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(255,107,157,0.4));
+}
 
 .menu-subtitle {
-  text-align: center;
-  color: #aaa;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted);
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
-.menu-section { display: flex; flex-direction: column; gap: 10px; }
-
-.section-heading {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.7rem;
-  color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 0;
-}
-
-/* ── Category cards ── */
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 10px;
-}
-
-.category-card {
-  background: linear-gradient(145deg, #1a2470, #0d1540);
-  border: 2px solid #2a3cff44;
-  border-radius: 14px;
-  padding: 14px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  color: #fff;
-  text-align: center;
-}
-.category-card:hover {
-  border-color: #00e5ff88;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,229,255,0.25);
-}
-.category-card.selected {
-  border-color: #00e5ff;
-  box-shadow: 0 0 18px #00e5ff88, inset 0 0 20px #00e5ff11;
-  background: linear-gradient(145deg, #0d3060, #061830);
-}
-.cat-emoji  { font-size: 2rem; line-height: 1; }
-.cat-name   { font-family: "Press Start 2P", monospace; font-size: 0.55rem; color: #fff; }
-.cat-level  { font-size: 0.7rem; font-weight: 700; }
-.cat-desc   { font-size: 0.72rem; color: #aaa; line-height: 1.3; }
-
-/* ── Mode buttons ── */
-.mode-buttons {
+/* ── 2×2 Category Grid ── */
+.category-grid-2x2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
-.mode-btn {
-  background: linear-gradient(145deg, #1a2470, #0d1540);
-  border: 2px solid #2a3cff44;
-  border-radius: 14px;
-  padding: 16px 10px;
+.category-card-2x2 {
+  background: var(--card-gradient, linear-gradient(135deg, #A78BFA, #EC4899));
+  border: none;
+  border-radius: 22px;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12), 0 0 0 3px rgba(255,255,255,0.8);
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.2s ease;
+  animation: cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  color: #fff;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: scale(0.7) rotate(-4deg); }
+  to   { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+
+.category-card-2x2::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.category-card-2x2:hover::before { opacity: 1; }
+.category-card-2x2:hover {
+  transform: scale(1.05) translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18),
+              0 0 0 3px rgba(255,255,255,0.9),
+              0 0 40px var(--card-glow, rgba(167,139,250,0.4));
+}
+.category-card-2x2:active {
+  transform: scale(0.97);
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: #fff;
-  transition: all 0.2s ease;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 10px;
 }
-.mode-btn:hover {
-  border-color: #ff00cc88;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(255,0,204,0.2);
-}
-.mode-btn.selected {
-  border-color: #ff00cc;
-  box-shadow: 0 0 18px #ff00cc88, inset 0 0 20px #ff00cc11;
-  background: linear-gradient(145deg, #3d0d40, #1a0522);
-}
-.mode-icon { font-size: 2rem; }
-.mode-name { font-family: "Press Start 2P", monospace; font-size: 0.55rem; }
-.mode-desc { font-size: 0.7rem; color: #aaa; text-align: center; line-height: 1.4; }
 
-/* ── Start button ── */
-.start-btn {
-  align-self: center;
-  padding: 16px 40px;
-  font-size: 0.9rem;
-  border-radius: 50px;
-  border: none;
-  transition: all 0.2s ease;
+.cat-emoji-big {
+  font-size: clamp(2.4rem, 8vw, 3.2rem);
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  animation: wiggle 4s ease-in-out infinite;
 }
-.start-btn.not-ready {
-  background: #1a1a2e;
-  color: #555;
-  border: 2px solid #333;
+@keyframes wiggle {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  90%            { transform: rotate(-8deg); }
+  95%            { transform: rotate(8deg); }
 }
-.start-btn.ready {
-  background: linear-gradient(135deg, #00e5ff, #0077ff);
-  color: #000;
-  box-shadow: 0 0 25px #00e5ffaa;
-  animation: pulse-btn 2s ease-in-out infinite;
+
+.cat-name-big {
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  line-height: 1;
 }
-.start-btn.ready:hover {
-  transform: scale(1.06);
-  box-shadow: 0 0 40px #00e5ff;
+
+.cat-desc-small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+  line-height: 1.3;
 }
-@keyframes pulse-btn {
-  0%, 100% { box-shadow: 0 0 18px #00e5ffaa; }
-  50%       { box-shadow: 0 0 40px #00e5ff; }
+
+.card-play-hint {
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-top: 4px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    GAME PANEL
 ═══════════════════════════════════════════════════════════════ */
 .game-panel {
-  background: linear-gradient(160deg, #1a2aaa 0%, #0b0f60 100%);
-  border-radius: 20px;
-  padding: 14px 20px 20px;
-  box-shadow: 0 0 30px rgba(0,140,255,0.5);
+  background: var(--card-bg);
+  border-radius: 24px;
+  padding: 16px 18px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 0 0 3px rgba(167,139,250,0.2);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: fadeIn 0.3s ease;
+  gap: 12px;
+  animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 /* ── Header ── */
@@ -194,21 +238,23 @@ button {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .quit-btn {
-  background: transparent;
-  border: 2px solid #ff4d4d55;
-  border-radius: 8px;
-  color: #ff4d4d;
-  padding: 4px 8px;
-  font-size: 0.7rem;
+  background: rgba(255,107,107,0.1);
+  border: 2px solid rgba(255,107,107,0.3);
+  border-radius: 10px;
+  color: #FF6B6B;
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  font-family: "Fredoka One", sans-serif;
   transition: all 0.2s;
 }
 .quit-btn:hover {
-  background: #ff4d4d22;
-  border-color: #ff4d4d;
+  background: rgba(255,107,107,0.2);
+  border-color: #FF6B6B;
+  transform: scale(1.05);
 }
 
 /* ── Grade display ── */
@@ -218,26 +264,27 @@ button {
   align-items: flex-start;
 }
 .grade-letter {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(2rem, 7vw, 3.2rem);
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(2.4rem, 7vw, 3.4rem);
   line-height: 1;
   transition: color 0.4s ease;
+  text-shadow: 0 2px 8px currentColor;
 }
 .grade-combo {
-  font-size: 0.65rem;
-  font-family: "Press Start 2P", monospace;
-  opacity: 0.7;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.75rem;
+  opacity: 0.6;
   margin-top: 2px;
+  color: var(--text);
 }
 .grade-frozen-badge {
   font-size: 0.65rem;
-  color: #00e5ff;
+  font-family: "Fredoka One", sans-serif;
+  color: var(--teal);
   margin-top: 2px;
   animation: blink 1s step-end infinite;
 }
-@keyframes blink {
-  50% { opacity: 0.3; }
-}
+@keyframes blink { 50% { opacity: 0.3; } }
 
 /* SSS rainbow effect */
 .sss-glow {
@@ -254,52 +301,92 @@ button {
   gap: 4px;
 }
 .life-heart {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 3px rgba(255,0,0,0.3));
 }
 .life-heart.dead {
-  opacity: 0.25;
+  opacity: 0.2;
   filter: grayscale(1);
 }
 
 /* ── Score display ── */
 .score-display {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
   text-align: center;
+  color: var(--text);
   transition: color 0.4s ease;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FEEDBACK
+   FEEDBACK  (all inline, same spot)
 ═══════════════════════════════════════════════════════════════ */
-.feedback-area {
-  min-height: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.feedback-placeholder { min-height: 2.4rem; }
 
 .feedback {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.7rem;
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(0.95rem, 3vw, 1.1rem);
   text-align: center;
-  animation: pop 0.2s ease;
-  line-height: 1.6;
+  animation: feedbackPop 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  line-height: 1.5;
+  padding: 7px 20px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  transform-origin: center center;
 }
-.correct-fb { color: #00ff88; }
-.retry-fb   { color: #ffea00; }
-.wrong-fb   { color: #ff4d4d; }
 
-.points-earned {
-  color: #00e5ff;
-  margin-left: 8px;
+@keyframes feedbackPop {
+  0%   { opacity: 0; transform: scale(0.5); }
+  65%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-.feedback-placeholder { min-height: 1.2rem; }
+.correct-fb {
+  color: #fff;
+  background: linear-gradient(135deg, var(--green), var(--teal));
+  box-shadow: 0 4px 18px rgba(107,203,119,0.45);
+}
+
+.streak7-fb {
+  color: #fff;
+  background: linear-gradient(135deg, #FFD93D, #FF6B9D, #A78BFA);
+  box-shadow: 0 6px 28px rgba(255,107,157,0.55);
+  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+  animation: feedbackPop 0.35s cubic-bezier(0.34,1.56,0.64,1),
+             rainbow-bg 0.6s linear infinite alternate;
+}
+@keyframes rainbow-bg {
+  from { filter: hue-rotate(0deg); }
+  to   { filter: hue-rotate(40deg); }
+}
+.streak7-crown { font-size: 1.1em; }
+
+.retry-fb {
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange), #FF6B6B);
+  box-shadow: 0 4px 16px rgba(255,142,83,0.45);
+}
+
+.wrong-fb {
+  color: #fff;
+  background: linear-gradient(135deg, #FF6B6B, var(--pink));
+  box-shadow: 0 4px 16px rgba(255,107,107,0.45);
+}
+
+.pts-badge {
+  background: rgba(0,0,0,0.18);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.88em;
+}
 
 @keyframes pop {
-  from { transform: scale(0.7); opacity: 0; }
+  from { transform: scale(0.6); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
 
@@ -315,12 +402,13 @@ button {
 }
 
 .booster-popup {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.6rem;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.75rem;
   border: 2px solid;
-  border-radius: 8px;
-  padding: 5px 14px;
-  animation: pop 0.25s ease, booster-out 1.2s ease forwards;
+  border-radius: 20px;
+  padding: 5px 16px;
+  background: var(--card-bg);
+  animation: pop 0.25s cubic-bezier(0.34,1.56,0.64,1), booster-out 1.2s ease forwards;
 }
 @keyframes booster-out {
   0%, 70%  { opacity: 1; }
@@ -329,148 +417,145 @@ button {
 
 .active-effects {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 .effect-badge {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.55rem;
-  background: rgba(0,0,0,0.3);
-  border-radius: 6px;
-  padding: 3px 8px;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.6rem;
+  background: rgba(167,139,250,0.12);
+  color: var(--purple);
+  border-radius: 20px;
+  padding: 3px 10px;
+  border: 1px solid rgba(167,139,250,0.3);
 }
 
-/* ─── Booster badge on problem card ─── */
 .booster-badge {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
-  color: #ffea00;
-  background: rgba(255,234,0,0.1);
-  border: 1px solid #ffea0066;
-  border-radius: 6px;
-  padding: 4px 10px;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.65rem;
+  color: var(--orange);
+  background: rgba(255,142,83,0.1);
+  border: 2px solid rgba(255,142,83,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
   align-self: center;
   animation: pulse-badge 1.5s ease-in-out infinite;
 }
 @keyframes pulse-badge {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.05); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
    PROBLEM CARD
 ═══════════════════════════════════════════════════════════════ */
 .problem-card {
-  background: rgba(0,0,0,0.2);
-  border-radius: 14px;
-  padding: 16px 14px;
+  background: linear-gradient(135deg, #F8F4FF, #EEF2FF);
+  border-radius: 20px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-height: 160px;
+  border: 2px solid rgba(167,139,250,0.2);
+  box-shadow: 0 4px 16px rgba(167,139,250,0.1);
 }
 
 .category-label {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
-  color: #aaa;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.65rem;
+  color: var(--purple);
   letter-spacing: 2px;
   text-transform: uppercase;
+  background: rgba(167,139,250,0.12);
+  padding: 3px 10px;
+  border-radius: 20px;
 }
 
 /* ── Arithmetic (vertical) ── */
 .vertical-layout {
   align-items: flex-end;
-  font-size: 2.2rem;
+  font-size: 2.4rem;
+  color: var(--text);
+  font-weight: 900;
 }
 .top-number  { width: 100%; text-align: right; }
-.bottom-row  { display: flex; width: 100%; justify-content: flex-end; gap: 10px; }
-.operator    { font-size: 2rem; color: #00e5ff; }
+.bottom-row  { display: flex; width: 100%; justify-content: flex-end; gap: 12px; }
+.operator    { font-size: 2.2rem; color: var(--purple); }
 
 /* ── Arithmetic (division fraction) ── */
 .division-layout {
   flex-direction: row !important;
   align-items: center;
-  gap: 18px;
+  gap: 20px;
 }
 .fraction {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  font-size: 2rem;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text);
 }
 
 /* ── Value display ── */
 .value-display {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 900;
   display: inline-block;
+  color: var(--text);
 }
 
 /* ── Horizontal line ── */
 .horizontal-line {
   height: 3px;
   width: 100%;
-  background: linear-gradient(90deg, #00e5ff, #ff00cc);
+  background: linear-gradient(90deg, var(--purple), var(--pink));
   border-radius: 2px;
 }
 
 .equals {
-  font-size: 1.8rem;
-  color: #aaa;
+  font-size: 2rem;
+  color: var(--muted);
+  font-weight: 900;
 }
 
-/* ── Expression / PEMDAS / Exponent / Algebra ── */
+/* ── Expression / PEMDAS / Algebra ── */
 .expression-layout {
   align-items: center;
 }
 
 .expression-text {
-  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  font-size: clamp(1.7rem, 5.5vw, 2.6rem);
   font-weight: 900;
   text-align: center;
-  color: #fff;
+  color: var(--text);
   word-break: break-word;
-}
-
-.exponent-expr {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-.exp-base    { font-size: 2.4rem; font-weight: 900; }
-.exp-power   { font-size: 1.2rem; color: #ffea00; font-weight: 700; }
-.root-degree { font-size: 1rem; color: #ffea00; font-weight: 700; margin-right: 2px; }
-.sqrt-radical {
-  font-size: 2.2rem;
-  color: #00ff88;
-  font-weight: 900;
-  line-height: 1;
 }
 
 .equals-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   justify-content: center;
 }
 
-.algebra-row { justify-content: center; gap: 12px; }
+.algebra-row { justify-content: center; gap: 14px; }
 .algebra-x-label {
-  font-family: "Press Start 2P", monospace;
-  font-size: 1rem;
-  color: #00e5ff;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 1.1rem;
+  color: var(--blue);
   white-space: nowrap;
 }
 
 /* ── Counting ── */
 .counting-layout { align-items: center; }
 .counting-prompt {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.65rem;
-  color: #aaa;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 .counting-items {
   display: flex;
@@ -481,11 +566,10 @@ button {
   padding: 8px;
 }
 .counting-item {
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
   line-height: 1;
-  animation: item-pop 0.3s ease backwards;
+  animation: item-pop 0.3s cubic-bezier(0.34,1.56,0.64,1) backwards;
 }
-/* stagger counting items */
 .counting-item:nth-child(1)  { animation-delay: 0.02s; }
 .counting-item:nth-child(2)  { animation-delay: 0.04s; }
 .counting-item:nth-child(3)  { animation-delay: 0.06s; }
@@ -500,8 +584,8 @@ button {
 .counting-item:nth-child(12) { animation-delay: 0.24s; }
 
 @keyframes item-pop {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -514,27 +598,26 @@ button {
 
 .answer-input {
   width: 100%;
-  background: rgba(0,100,255,0.15);
-  border: 2px solid #2a4aff66;
-  border-radius: 10px;
+  background: #fff;
+  border: 2.5px solid rgba(167,139,250,0.4);
+  border-radius: 14px;
   padding: 10px 14px;
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 900;
-  color: #fff;
+  color: var(--text);
   text-align: center;
   transition: all 0.2s;
   outline: none;
   font-family: "Nunito", sans-serif;
+  box-shadow: 0 2px 10px rgba(167,139,250,0.1);
 }
 .answer-input:focus {
-  border-color: #00e5ff;
-  box-shadow: 0 0 12px #00e5ff66;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(167,139,250,0.2);
   transform: scale(1.03);
 }
-.answer-input:disabled {
-  opacity: 0.4;
-}
-.answer-input::placeholder { color: #444; }
+.answer-input:disabled { opacity: 0.4; }
+.answer-input::placeholder { color: #CBD5E1; }
 
 /* ═══════════════════════════════════════════════════════════════
    CALCULATOR PAD
@@ -554,99 +637,104 @@ button {
 }
 
 .calc-key {
-  padding: 14px 8px;
-  font-size: 1.1rem;
+  padding: 15px 8px;
+  font-size: 1.2rem;
   font-weight: 700;
-  border: 2px solid #00e5ff44;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #1e2eaa, #0d1660);
-  color: #fff;
-  text-shadow: 0 0 4px #00e5ff66;
-  box-shadow: 0 4px 0 #060a30, 0 4px 10px rgba(0,229,255,0.25);
+  border: 2.5px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 3px 0 rgba(167,139,250,0.2), 0 4px 12px rgba(0,0,0,0.05);
   transition: all 0.12s ease;
   font-family: "Nunito", sans-serif;
 }
 .calc-key:hover:not(:disabled) {
+  border-color: var(--purple);
   transform: translateY(-2px);
-  box-shadow: 0 6px 0 #060a30, 0 6px 14px rgba(0,229,255,0.4);
-  background: linear-gradient(145deg, #2a3ecc, #1220aa);
+  box-shadow: 0 5px 0 rgba(167,139,250,0.3), 0 6px 16px rgba(167,139,250,0.2);
+  background: #FAF8FF;
 }
 .calc-key:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: 0 0 0 #060a30, inset 0 0 8px rgba(0,229,255,0.3);
+  transform: translateY(3px);
+  box-shadow: 0 0 0 rgba(167,139,250,0.2);
 }
-.calc-key:disabled { opacity: 0.35; cursor: default; }
+.calc-key:disabled { opacity: 0.3; cursor: default; }
 
 /* Submit key */
 .submit-key {
-  background: linear-gradient(145deg, #00dd66, #009944) !important;
-  border-color: #00ff88 !important;
-  color: #001a0a !important;
-  text-shadow: none !important;
-  font-family: "Press Start 2P", monospace !important;
-  font-size: 0.6rem !important;
-  box-shadow: 0 4px 0 #004422, 0 4px 12px rgba(0,255,136,0.4) !important;
+  background: linear-gradient(135deg, var(--green), var(--teal)) !important;
+  border-color: var(--green) !important;
+  color: #fff !important;
+  font-family: "Fredoka One", sans-serif !important;
+  font-size: 0.85rem !important;
+  box-shadow: 0 3px 0 #3a9a5c, 0 4px 14px rgba(107,203,119,0.4) !important;
 }
 .submit-key:hover:not(:disabled) {
-  background: linear-gradient(145deg, #00ff88, #00dd66) !important;
-  box-shadow: 0 6px 0 #004422, 0 6px 16px rgba(0,255,136,0.5) !important;
+  background: linear-gradient(135deg, #7ED87F, var(--green)) !important;
+  box-shadow: 0 5px 0 #3a9a5c, 0 6px 20px rgba(107,203,119,0.5) !important;
 }
 
 /* Back key */
 .back-key {
-  background: linear-gradient(145deg, #cc2222, #881111) !important;
-  border-color: #ff4444 !important;
+  background: linear-gradient(135deg, #FF8E8E, #FF6B6B) !important;
+  border-color: #FF6B6B !important;
   color: #fff !important;
-  box-shadow: 0 4px 0 #440000, 0 4px 12px rgba(255,68,68,0.4) !important;
+  box-shadow: 0 3px 0 #cc4444, 0 4px 12px rgba(255,107,107,0.35) !important;
 }
 .back-key:hover:not(:disabled) {
-  background: linear-gradient(145deg, #ff3333, #cc1111) !important;
+  background: linear-gradient(135deg, #FF6B6B, #FF4444) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    SETTINGS PANEL
 ═══════════════════════════════════════════════════════════════ */
 .settings-btn {
-  background: transparent;
-  border: 2px solid #2a3cff55;
-  border-radius: 8px;
+  background: rgba(167,139,250,0.1);
+  border: 2px solid rgba(167,139,250,0.3);
+  border-radius: 10px;
   font-size: 1.1rem;
-  padding: 4px 8px;
+  padding: 5px 9px;
   transition: all 0.2s;
   line-height: 1;
 }
 .settings-btn:hover {
-  background: rgba(0,229,255,0.1);
-  border-color: #00e5ff;
+  background: rgba(167,139,250,0.2);
+  border-color: var(--purple);
+  transform: rotate(30deg) scale(1.1);
 }
 
 .settings-panel {
-  background: linear-gradient(145deg, #0d1540, #060b28);
-  border: 2px solid #00e5ff66;
-  border-radius: 14px;
-  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid rgba(167,139,250,0.3);
+  border-radius: 18px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 0 20px #00e5ff22;
-  animation: fadeIn 0.2s ease;
+  gap: 14px;
+  box-shadow: 0 8px 28px rgba(167,139,250,0.15);
+  animation: slideUp 0.2s ease;
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.6rem;
-  color: #00e5ff;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.85rem;
+  color: var(--purple);
 }
 .settings-close {
-  background: transparent;
-  border: 1px solid #ff4d4d44;
-  color: #ff4d4d;
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 0.65rem;
+  background: rgba(107,203,119,0.1);
+  border: 1.5px solid rgba(107,203,119,0.4);
+  color: #3a9a5c;
+  border-radius: 8px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  font-family: "Fredoka One", sans-serif;
+}
+.settings-close:hover {
+  background: rgba(107,203,119,0.2);
+  border-color: var(--green);
 }
 
 .settings-row {
@@ -657,9 +745,9 @@ button {
 }
 
 .settings-label {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
-  color: #aaa;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.65rem;
+  color: var(--muted);
   white-space: nowrap;
 }
 
@@ -669,46 +757,105 @@ button {
 }
 
 .op-toggle-btn {
-  background: #0d1540;
-  border: 2px solid #2a3cff55;
-  border-radius: 8px;
-  color: #aaa;
+  background: #F8F4FF;
+  border: 2px solid rgba(167,139,250,0.25);
+  border-radius: 10px;
+  color: var(--muted);
   padding: 6px 10px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-family: "Nunito", sans-serif;
   font-weight: 700;
   transition: all 0.15s ease;
   min-width: 38px;
 }
 .op-toggle-btn:hover {
-  border-color: #00e5ff88;
-  color: #fff;
+  border-color: var(--purple);
+  color: var(--purple);
 }
 .op-toggle-btn.active {
-  background: rgba(0,229,255,0.15);
-  border-color: #00e5ff;
-  color: #00e5ff;
-  box-shadow: 0 0 10px #00e5ff44;
+  background: rgba(167,139,250,0.15);
+  border-color: var(--purple);
+  color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
 }
 
 .toggle-pill {
-  background: #0d1540;
-  border: 2px solid #2a3cff55;
+  background: #F8F4FF;
+  border: 2px solid rgba(167,139,250,0.25);
   border-radius: 50px;
-  color: #aaa;
+  color: var(--muted);
   padding: 5px 18px;
-  font-size: 0.55rem;
-  font-family: "Press Start 2P", monospace;
+  font-size: 0.65rem;
+  font-family: "Fredoka One", sans-serif;
   transition: all 0.15s ease;
 }
 .toggle-pill.active {
-  background: rgba(0,255,136,0.1);
-  border-color: #00ff88;
-  color: #00ff88;
-  box-shadow: 0 0 10px #00ff8844;
+  background: rgba(107,203,119,0.12);
+  border-color: var(--green);
+  color: #3a9a5c;
+  box-shadow: 0 0 0 3px rgba(107,203,119,0.15);
 }
 
-/* ── Scientific notation specific styles ── */
+/* ── Range stepper ── */
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.range-sep {
+  font-family: "Fredoka One", sans-serif;
+  color: var(--muted);
+  font-size: 1rem;
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 2px solid rgba(167,139,250,0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stepper-btn {
+  background: #F8F4FF;
+  border: none;
+  color: var(--purple);
+  font-size: 1rem;
+  font-family: "Fredoka One", sans-serif;
+  padding: 4px 10px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.stepper-btn:hover:not(:disabled) { background: rgba(167,139,250,0.15); }
+.stepper-btn:disabled { opacity: 0.3; cursor: default; }
+.stepper-val {
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.95rem;
+  color: var(--text);
+  min-width: 26px;
+  text-align: center;
+  padding: 0 4px;
+}
+
+/* ── Quit game button ── */
+.quit-game-btn {
+  width: 100%;
+  background: rgba(255,107,107,0.08);
+  border: 2px solid rgba(255,107,107,0.35);
+  border-radius: 12px;
+  color: #FF6B6B;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-family: "Fredoka One", sans-serif;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.quit-game-btn:hover {
+  background: rgba(255,107,107,0.15);
+  border-color: #FF6B6B;
+  transform: scale(1.02);
+}
+
+/* Exponent-specific styles (kept for layout compatibility) */
 .sci-expr {
   display: flex;
   flex-wrap: wrap;
@@ -723,26 +870,20 @@ button {
   font-weight: 900;
   gap: 1px;
 }
-.sci-op {
-  color: #00e5ff;
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin: 0 4px;
-}
-.sci-unknown {
-  color: #ff6600 !important;
-  font-size: 1.1rem !important;
-}
+.sci-op { color: var(--blue); font-size: 1.4rem; font-weight: 700; margin: 0 4px; }
+.sci-unknown { color: var(--orange) !important; font-size: 1.1rem !important; }
 .rule-hint {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
-  color: #aaa;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.55rem;
+  color: var(--muted);
   text-align: center;
 }
-.exp-term {
-  display: inline-flex;
-  align-items: baseline;
-}
+.exp-term { display: inline-flex; align-items: baseline; }
+.exponent-expr { display: flex; align-items: baseline; gap: 2px; }
+.exp-base    { font-size: 2.4rem; font-weight: 900; color: var(--text); }
+.exp-power   { font-size: 1.2rem; color: var(--yellow); font-weight: 700; }
+.root-degree { font-size: 1rem; color: var(--yellow); font-weight: 700; margin-right: 2px; }
+.sqrt-radical { font-size: 2.2rem; color: var(--green); font-weight: 900; line-height: 1; }
 
 /* ═══════════════════════════════════════════════════════════════
    GAME OVER SCREEN
@@ -754,15 +895,18 @@ button {
   justify-content: center;
   gap: 24px;
   min-height: 80dvh;
-  animation: fadeIn 0.5s ease;
+  animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 .go-title {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(1.4rem, 6vw, 2.8rem);
-  color: #ff4d4d;
-  text-shadow: 0 0 30px #ff4d4d;
-  letter-spacing: 4px;
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  background: linear-gradient(135deg, #FF6B6B, var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px rgba(255,107,107,0.4));
+  letter-spacing: 2px;
   animation: shake 0.4s ease;
 }
 @keyframes shake {
@@ -772,39 +916,44 @@ button {
 }
 
 .go-grade {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(3rem, 12vw, 6rem);
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(4rem, 15vw, 7rem);
   transition: color 0.4s;
-  animation: pop 0.35s ease;
+  animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  text-shadow: 0 4px 20px currentColor;
 }
 
 .go-score {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(1rem, 4vw, 1.8rem);
-  color: #fff;
+  font-family: "Fredoka One", sans-serif;
+  font-size: clamp(1.2rem, 4.5vw, 2rem);
+  color: var(--text);
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .go-message {
   font-size: 1rem;
-  color: #aaa;
+  font-weight: 600;
+  color: var(--muted);
   text-align: center;
   max-width: 300px;
   line-height: 1.6;
 }
 
 .menu-btn {
-  background: linear-gradient(135deg, #2a3cff, #0011aa);
-  border: 2px solid #00e5ff;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  border: none;
   border-radius: 50px;
-  color: #00e5ff;
-  padding: 14px 36px;
-  font-size: 0.7rem;
+  color: #fff;
+  padding: 14px 40px;
+  font-size: 1rem;
+  font-family: "Fredoka One", sans-serif;
   transition: all 0.2s;
-  box-shadow: 0 0 16px #00e5ff55;
+  box-shadow: 0 6px 20px rgba(167,139,250,0.4);
 }
 .menu-btn:hover {
-  background: linear-gradient(135deg, #00e5ff, #0077ff);
-  color: #000;
-  transform: scale(1.05);
-  box-shadow: 0 0 28px #00e5ff;
+  transform: scale(1.07) translateY(-2px);
+  box-shadow: 0 10px 30px rgba(167,139,250,0.5);
 }

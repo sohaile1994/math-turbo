@@ -6,32 +6,30 @@ const ALL_OPS = ["+", "-", "×", "÷"];
 
 export const SettingsProvider = ({ children }) => {
   // Which arithmetic operations are active (at least one must always be on)
-  const [selectedOps, setSelectedOps] = useState(ALL_OPS);
+  const [selectedOps, setSelectedOps] = useState(["+"]); // radio: one at a time
   const [allowNegatives, setAllowNegatives] = useState(false);
   const [allowDecimals, setAllowDecimals]   = useState(false);
-  // Easy | Medium | Hard — controls algebra template complexity
   const [difficulty, setDifficulty]         = useState("medium");
+  const [valueMin, setValueMin]             = useState(1);
+  const [valueMax, setValueMax]             = useState(9);
 
-  const toggleOp = (op) => {
-    setSelectedOps(prev => {
-      if (prev.includes(op)) {
-        if (prev.length === 1) return prev; // always keep at least one
-        return prev.filter(o => o !== op);
-      }
-      return [...prev, op];
-    });
-  };
+  // Radio-style: selecting an op deselects all others
+  const selectOp = (op) => setSelectedOps([op]);
 
   return (
     <SettingsContext.Provider value={{
       selectedOps,
-      toggleOp,
+      selectOp,
       allowNegatives,
       setAllowNegatives,
       allowDecimals,
       setAllowDecimals,
       difficulty,
       setDifficulty,
+      valueMin,
+      setValueMin,
+      valueMax,
+      setValueMax,
     }}>
       {children}
     </SettingsContext.Provider>

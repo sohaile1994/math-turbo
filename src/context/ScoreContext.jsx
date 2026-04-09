@@ -25,6 +25,11 @@ export const ScoreProvider = ({ children }) => {
     setScore(s => Math.max(0, s - 50));
   };
 
+  const registerBonus = (points) => {
+    setScore(s => s + points);
+    return points;
+  };
+
   const activateScoreBoost = (problems = 5) => {
     setScoreBoostLeft(b => b + problems);
   };
@@ -40,6 +45,7 @@ export const ScoreProvider = ({ children }) => {
       scoreBoostLeft,
       registerCorrect,
       registerWrong,
+      registerBonus,
       activateScoreBoost,
       resetScore,
     }}>

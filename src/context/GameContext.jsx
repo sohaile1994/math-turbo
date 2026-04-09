@@ -9,9 +9,9 @@ export const GameProvider = ({ children }) => {
   const [mode, setMode]             = useState(GameMode.ENDLESS);
   const [finalScore, setFinalScore] = useState(0);
 
-  const startGame = ({ category: cat, mode: m }) => {
+  const startGame = ({ category: cat }) => {
     setCategory(cat);
-    setMode(m);
+    setMode(GameMode.ENDLESS);
     setScreen(Screen.GAME);
   };
 

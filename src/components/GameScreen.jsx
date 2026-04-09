@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame }   from "../context/GameContext";
-import { GameMode }  from "../enums";
 
 import { GradeProvider }    from "../context/GradeContext";
 import { ScoreProvider }    from "../context/ScoreContext";
@@ -22,7 +21,7 @@ import SettingsPanel       from "./game/SettingsPanel";
 
 // ── Inner content — has access to all providers ──────────────────
 function GameContent() {
-  const { endGame, mode } = useGame();
+  const { endGame } = useGame();
   const { score }         = useScore();
   const { isGameOver }    = useLives();
   const scoreRef          = useRef(score);
@@ -49,13 +48,12 @@ function GameContent() {
           >
             ⚙️
           </button>
-          {mode !== GameMode.PRACTICE && <LivesDisplay />}
-          <button className="quit-btn" onClick={quit} title="Quit">✕</button>
+          <LivesDisplay />
         </div>
       </div>
 
       {/* Settings panel (overlay inside card) */}
-      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} onQuit={quit} />}
 
       <ScoreDisplay />
       <AnswerFeedback />
@@ -71,7 +69,7 @@ export default function GameScreen() {
   const { mode, category } = useGame();
 
   return (
-    <GradeProvider mode={mode}>
+    <GradeProvider>
       <ScoreProvider>
         <LivesProvider mode={mode}>
           <SettingsProvider>

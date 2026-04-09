@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useRef } from "react";
 import { useProblem }  from "./ProblemContext";
 import { useScore }    from "./ScoreContext";
 import { useGrade }    from "./GradeContext";
@@ -8,19 +8,26 @@ import { BoosterType } from "../enums";
 
 const AnswerContext = createContext();
 
+const STREAK_TARGET = 7;
+const STREAK_BONUS  = 1500; // base bonus points for hitting 7 in a row
+
 export const AnswerProvider = ({ children }) => {
-  const { problem, nextProblem }                        = useProblem();
-  const { registerCorrect, registerWrong, activateScoreBoost } = useScore();
-  const { multiplier, incrementCombo, resetGrade, activateGradeFreeze } = useGrade();
-  const { loseLife, gainLife }                          = useLives();
+  const { problem, nextProblem }                                    = useProblem();
+  const { registerCorrect, registerWrong, registerBonus, activateScoreBoost } = useScore();
+  const { multiplier, incrementCombo, resetGrade, activateGradeFreeze }       = useGrade();
+  const { loseLife, gainLife }                                      = useLives();
 
   const [answer, setAnswer]             = useState("");
-  const [feedback, setFeedback]         = useState(null); // null | "correct" | "retry" | "wrong"
-  const [attempts, setAttempts]         = useState(0);
+  const [feedback, setFeedback]         = useState(null); // null | "correct" | "wrong" | "streak7" | "retry"
   const [locked, setLocked]             = useState(false);
+  const [attempts, setAttempts]         = useState(0);
   const [correctAnswerStr, setCorrectAnswerStr] = useState(null);
   const [pointsEarned, setPointsEarned]         = useState(null);
   const [boosterAwarded, setBoosterAwarded]     = useState(null);
+  const [streak, setStreak]                     = useState(0);
+  const [feedbackKey, setFeedbackKey]           = useState(0); // increments to re-trigger animation
+
+  const feedbackTimerRef = useRef(null);
 
   const submit = () => {
     if (locked || !answer.trim()) return;
@@ -28,15 +35,15 @@ export const AnswerProvider = ({ children }) => {
     const isCorrect = checkAnswer(problem, answer);
 
     if (isCorrect) {
-      // ── Double combo booster: increment twice ──
       const isDoubleCombo = problem.booster === BoosterType.DOUBLE_COMBO;
       incrementCombo(isDoubleCombo);
 
       const pts = registerCorrect(multiplier);
       setPointsEarned(pts);
-      setFeedback("correct");
+      setAnswer("");
 
       // ── Activate booster effects ──
+      let awarded = null;
       if (problem.booster) {
         switch (problem.booster) {
           case BoosterType.GRADE_FREEZE: activateGradeFreeze(12); break;
@@ -45,42 +52,68 @@ export const AnswerProvider = ({ children }) => {
           case BoosterType.DOUBLE_COMBO: /* handled above */        break;
           default: break;
         }
-        setBoosterAwarded(problem.booster);
+        awarded = problem.booster;
+      }
+      setBoosterAwarded(awarded);
+      setAttempts(0);
+
+      // ── Streak logic ──
+      const newStreak = streak + 1;
+
+      if (newStreak >= STREAK_TARGET) {
+        const bonus = Math.round(STREAK_BONUS * multiplier);
+        registerBonus(bonus);
+        setStreak(0);
+        setFeedback("streak7");
+        setFeedbackKey(k => k + 1);
+
+        // Clear feedback after 3s for the big celebration
+        clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = setTimeout(() => {
+          setFeedback(null);
+          setPointsEarned(null);
+          setBoosterAwarded(null);
+        }, 3000);
       } else {
-        setBoosterAwarded(null);
+        setStreak(newStreak);
+        setFeedback("correct");
+        setFeedbackKey(k => k + 1);
+
+        // Reset 2s feedback timer — cancels any running timer from previous correct
+        clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = setTimeout(() => {
+          setFeedback(null);
+          setPointsEarned(null);
+          setBoosterAwarded(null);
+        }, 2000);
       }
 
-      setAttempts(0);
-      setAnswer("");
-
-      setTimeout(() => {
-        setFeedback(null);
-        setPointsEarned(null);
-        setBoosterAwarded(null);
-        nextProblem();
-      }, 1200);
-
+      // Advance to next problem immediately
+      setTimeout(() => nextProblem(), 80);
       return;
     }
 
     // ── Wrong answer ──
     registerWrong();
+    setStreak(0);
+    setAnswer("");
 
     if (attempts === 0) {
-      // First mistake: warn and let them retry
+      // First mistake: lose a heart, let them try again
+      loseLife();
+      resetGrade();
       setAttempts(1);
       setFeedback("retry");
-      setAnswer("");
       return;
     }
 
-    // Second mistake: show answer, lose a life, reset grade
+    // Second mistake: lose another heart, show answer, block inputs for 2s
+    loseLife();
+    resetGrade();
+    setAttempts(0);
     setCorrectAnswerStr(formatCorrectAnswer(problem));
     setFeedback("wrong");
-    setAttempts(0);
-    setAnswer("");
-    resetGrade();
-    loseLife();
+    clearTimeout(feedbackTimerRef.current);
     setLocked(true);
 
     setTimeout(() => {
@@ -88,7 +121,7 @@ export const AnswerProvider = ({ children }) => {
       setCorrectAnswerStr(null);
       setLocked(false);
       nextProblem();
-    }, 3000);
+    }, 2000);
   };
 
   return (
@@ -97,6 +130,8 @@ export const AnswerProvider = ({ children }) => {
       setAnswer,
       submit,
       feedback,
+      feedbackKey,
+      streak,
       correctAnswerStr,
       pointsEarned,
       boosterAwarded,

@@ -5,7 +5,6 @@ import {
   generateCounting,
   generateArithmetic,
   generatePEMDAS,
-  generateExponent,
   generateAlgebra,
 } from "../generators";
 
@@ -16,7 +15,6 @@ function generateProblem(category, settings) {
     case Category.COUNTING:   return generateCounting();
     case Category.ARITHMETIC: return generateArithmetic(settings);
     case Category.PEMDAS:     return generatePEMDAS();
-    case Category.EXPONENTS:  return generateExponent();
     case Category.ALGEBRA:    return generateAlgebra(settings);
     default:                  return generateArithmetic(settings);
   }
@@ -31,8 +29,9 @@ export const ProblemProvider = ({ children, category }) => {
 
   const [problem, setProblem] = useState(() => generateProblem(category, settings));
 
-  const nextProblem = useCallback(() => {
-    setProblem(generateProblem(category, settingsRef.current));
+  // settingsOverride lets callers pass fresh settings before the ref syncs
+  const nextProblem = useCallback((settingsOverride) => {
+    setProblem(generateProblem(category, settingsOverride ?? settingsRef.current));
   }, [category]);
 
   return (

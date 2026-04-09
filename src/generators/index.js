@@ -51,44 +51,46 @@ export function generateCounting() {
 // ARITHMETIC
 // ─────────────────────────────────────────────
 export function generateArithmetic(settings = {}) {
-  const ops       = settings.selectedOps?.length ? settings.selectedOps : ["+","-","×","÷"];
-  const allowNeg  = settings.allowNegatives ?? false;
-  const allowDec  = settings.allowDecimals  ?? false;
-  const op        = pick(ops);
+  const ops      = settings.selectedOps?.length ? settings.selectedOps : ["+","-","×","÷"];
+  const allowNeg = settings.allowNegatives ?? false;
+  const allowDec = settings.allowDecimals  ?? false;
+  const lo       = settings.valueMin ?? 1;
+  const hi       = settings.valueMax ?? 9;
+  const op       = pick(ops);
   let a, b, answer, answerType = "integer";
 
   switch (op) {
     case "+":
-      a = randInt(2, 30);
-      b = randInt(2, 30);
+      a = randInt(lo, hi);
+      b = randInt(lo, hi);
       if (allowNeg && Math.random() < 0.4) b *= -1;
       answer = a + b;
       break;
 
     case "-":
-      a = randInt(5, 40);
-      b = randInt(1, a);
-      if (allowNeg && Math.random() < 0.4) { b = randInt(1, 30); }
+      a = randInt(lo, hi);
+      b = randInt(lo, a);
+      if (allowNeg && Math.random() < 0.4) { b = randInt(lo, hi); }
       answer = a - b;
       break;
 
     case "×":
-      a = randInt(2, 12);
-      b = randInt(2, 12);
+      a = randInt(lo, hi);
+      b = randInt(lo, hi);
       if (allowNeg && Math.random() < 0.4) b *= -1;
       answer = a * b;
       break;
 
     case "÷":
       if (allowDec) {
-        // Allow .5 answers: pick even divisor and numerator
-        b      = pick([2, 4, 5, 8, 10]);
-        answer = randInt(1, 20) + (Math.random() < 0.5 ? 0.5 : 0);
+        b      = pick([2, 4, 5, 8, 10].filter(v => v <= hi));
+        if (!b) b = 2;
+        answer = randInt(lo, hi) + (Math.random() < 0.5 ? 0.5 : 0);
         a      = b * answer;
         answerType = Number.isInteger(answer) ? "integer" : "decimal";
       } else {
-        b      = randInt(2, 12);
-        answer = randInt(2, 12);
+        b      = randInt(lo, hi);
+        answer = randInt(lo, hi);
         a      = b * answer;
       }
       break;

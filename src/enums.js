@@ -9,12 +9,10 @@ export const Category = {
   COUNTING: "counting",
   ARITHMETIC: "arithmetic",
   PEMDAS: "pemdas",
-  EXPONENTS: "exponents",
   ALGEBRA: "algebra",
 };
 
 export const GameMode = {
-  PRACTICE: "practice",
   ENDLESS: "endless",
 };
 

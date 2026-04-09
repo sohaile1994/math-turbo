@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { GradeLevel, GameMode } from "../enums";
+import { GradeLevel } from "../enums";
 
 const GradeContext = createContext();
 
@@ -25,13 +25,13 @@ export const GRADE_MULTIPLIERS = {
 };
 
 export const GRADE_COLORS = {
-  [GradeLevel.D]:   "#999",
-  [GradeLevel.C]:   "#00e5ff",
-  [GradeLevel.B]:   "#00ff88",
-  [GradeLevel.A]:   "#ffea00",
-  [GradeLevel.S]:   "#ff6600",
-  [GradeLevel.SS]:  "#ff00cc",
-  [GradeLevel.SSS]: "#ff2222",
+  [GradeLevel.D]:   "#9CA3AF",
+  [GradeLevel.C]:   "#4ECDC4",
+  [GradeLevel.B]:   "#6BCB77",
+  [GradeLevel.A]:   "#F59E0B",
+  [GradeLevel.S]:   "#FF8E53",
+  [GradeLevel.SS]:  "#A78BFA",
+  [GradeLevel.SSS]: "#FF6B9D",
 };
 
 function gradeFromCombo(combo) {
@@ -41,7 +41,7 @@ function gradeFromCombo(combo) {
   return GradeLevel.D;
 }
 
-export const GradeProvider = ({ children, mode }) => {
+export const GradeProvider = ({ children }) => {
   const [combo, setCombo]               = useState(0);
   const [grade, setGrade]               = useState(GradeLevel.D);
   const [frozen, setFrozen]             = useState(false);
@@ -52,8 +52,7 @@ export const GradeProvider = ({ children, mode }) => {
   const decayIntervalRef    = useRef(null);
   const freezeCountdownRef  = useRef(null);
 
-  // Decay speed: 5 s per combo point in endless, 9 s in practice
-  const decayMs = mode === GameMode.ENDLESS ? 5000 : 9000;
+  const decayMs = 1500;
 
   // Sync grade whenever combo changes
   useEffect(() => {
