@@ -13,13 +13,15 @@ export const Category = {
 };
 
 export const GameMode = {
-  ENDLESS: "endless",
+  PRACTICE:    "practice",
+  COMPETITIVE: "competitive",
 };
 
 export const Screen = {
-  MAIN_MENU: "main_menu",
-  GAME: "game",
-  GAME_OVER: "game_over",
+  MAIN_MENU:   "main_menu",
+  GAME:        "game",
+  GAME_OVER:   "game_over",
+  LEADERBOARD: "leaderboard",
 };
 
 export const GradeLevel = {

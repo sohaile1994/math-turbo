@@ -4,14 +4,16 @@ import { Screen, Category, GameMode } from "../enums";
 const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
-  const [screen, setScreen]         = useState(Screen.MAIN_MENU);
-  const [category, setCategory]     = useState(Category.ARITHMETIC);
-  const [mode, setMode]             = useState(GameMode.ENDLESS);
+  const [screen,     setScreen]     = useState(Screen.MAIN_MENU);
+  const [category,   setCategory]   = useState(Category.ARITHMETIC);
+  const [mode,       setMode]       = useState(GameMode.PRACTICE);
   const [finalScore, setFinalScore] = useState(0);
+  const [startedAt,  setStartedAt]  = useState(null);
 
-  const startGame = ({ category: cat }) => {
+  const startGame = ({ category: cat, mode: m }) => {
     setCategory(cat);
-    setMode(GameMode.ENDLESS);
+    setMode(m ?? GameMode.PRACTICE);
+    setStartedAt(Date.now());
     setScreen(Screen.GAME);
   };
 
@@ -20,7 +22,8 @@ export const GameProvider = ({ children }) => {
     setScreen(Screen.GAME_OVER);
   };
 
-  const goToMenu = () => setScreen(Screen.MAIN_MENU);
+  const goToMenu        = () => setScreen(Screen.MAIN_MENU);
+  const goToLeaderboard = () => setScreen(Screen.LEADERBOARD);
 
   return (
     <GameContext.Provider value={{
@@ -28,9 +31,11 @@ export const GameProvider = ({ children }) => {
       category,
       mode,
       finalScore,
+      startedAt,
       startGame,
       endGame,
       goToMenu,
+      goToLeaderboard,
     }}>
       {children}
     </GameContext.Provider>

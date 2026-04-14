@@ -11,13 +11,12 @@ const BOOSTER_STYLE = {
 };
 
 export default function BoosterNotification() {
-  const { boosterAwarded }  = useAnswer();
-  const { frozen, freezeSecsLeft } = useGrade();
-  const { scoreBoostLeft }  = useScore();
+  const { boosterAwarded }          = useAnswer();
+  const { frozen, freezeSecsLeft }  = useGrade();
+  const { scoreBoostLeft }          = useScore();
 
   return (
     <div className="booster-area">
-      {/* Award popup — shows for the 1.2 s feedback window */}
       {boosterAwarded && (() => {
         const s = BOOSTER_STYLE[boosterAwarded];
         return (
@@ -27,7 +26,6 @@ export default function BoosterNotification() {
         );
       })()}
 
-      {/* Persistent active-effect indicators */}
       <div className="active-effects">
         {frozen && (
           <span className="effect-badge" style={{ color: "#00e5ff" }}>

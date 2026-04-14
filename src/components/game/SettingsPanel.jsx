@@ -153,10 +153,6 @@ export default function SettingsPanel({ onClose, onQuit }) {
         </div>
       )}
 
-      {/* ── Quit ── */}
-      <button className="quit-game-btn" onClick={onQuit}>
-        ✕ Quit Game
-      </button>
     </div>
   );
 }
