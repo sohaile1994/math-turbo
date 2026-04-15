@@ -12,7 +12,7 @@ const SUBJECTS = [
 
 const RANK_ICONS = ["🥇", "🥈", "🥉"];
 
-function gradeLabel(g) { return `${g}th`; }
+function gradeLabel(g) { return g === 0 ? "Staff" : `${g}th`; }
 
 function formatDuration(secs) {
   if (!secs) return null;

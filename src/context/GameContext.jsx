@@ -24,6 +24,8 @@ export const GameProvider = ({ children }) => {
 
   const goToMenu        = () => setScreen(Screen.MAIN_MENU);
   const goToLeaderboard = () => setScreen(Screen.LEADERBOARD);
+  const goToAdmin       = () => setScreen(Screen.ADMIN);
+  const goToSuperAdmin  = () => setScreen(Screen.SUPER_ADMIN);
 
   return (
     <GameContext.Provider value={{
@@ -36,6 +38,8 @@ export const GameProvider = ({ children }) => {
       endGame,
       goToMenu,
       goToLeaderboard,
+      goToAdmin,
+      goToSuperAdmin,
     }}>
       {children}
     </GameContext.Provider>

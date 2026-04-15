@@ -22,6 +22,8 @@ export const Screen = {
   GAME:        "game",
   GAME_OVER:   "game_over",
   LEADERBOARD: "leaderboard",
+  ADMIN:       "admin",
+  SUPER_ADMIN: "super_admin",
 };
 
 export const GradeLevel = {

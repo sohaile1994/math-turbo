@@ -10,7 +10,7 @@ const SUBJECTS = [
   { id: Category.ALGEBRA,    label: "Algebra",      emoji: "🔣", gradient: "linear-gradient(135deg,#F59E0B,#EF4444)" },
 ];
 
-function gradeLabel(g) { return `${g}th Grade`; }
+function gradeLabel(g) { return g === 0 ? "Staff" : `${g}th Grade`; }
 
 export default function StatsModal({ onClose }) {
   const { user }                 = useAuth();

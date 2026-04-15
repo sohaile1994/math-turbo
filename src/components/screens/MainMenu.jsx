@@ -40,8 +40,8 @@ const CATEGORIES = [
 ];
 
 export default function MainMenu() {
-  const { startGame, goToLeaderboard } = useGame();
-  const { user, logoutUser }           = useAuth();
+  const { startGame, goToLeaderboard, goToAdmin, goToSuperAdmin } = useGame();
+  const { user, logoutUser, isTeacher, isAdmin }                  = useAuth();
   const [selectedMode, setSelectedMode] = useState(GameMode.COMPETITIVE);
   const [showStats, setShowStats]       = useState(false);
 
@@ -67,6 +67,12 @@ export default function MainMenu() {
             <span className="menu-user-name">👋 {user.displayName}</span>
             <button className="menu-icon-btn" onClick={() => setShowStats(true)} title="My Stats">📊</button>
             <button className="menu-icon-btn lb-icon-btn" onClick={goToLeaderboard} title="Leaderboard">🏆</button>
+            {isTeacher && (
+              <button className="menu-icon-btn admin-icon-btn" onClick={goToAdmin} title="Manage Students">⚙️</button>
+            )}
+            {isAdmin && (
+              <button className="menu-icon-btn superadmin-icon-btn" onClick={goToSuperAdmin} title="Manage Teachers">👑</button>
+            )}
             <button className="menu-logout-btn" onClick={logoutUser}>Log out</button>
           </div>
         )}

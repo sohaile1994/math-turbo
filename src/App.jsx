@@ -6,6 +6,8 @@ import GameScreen       from "./components/GameScreen";
 import GameOver         from "./components/screens/GameOver";
 import LoginScreen      from "./components/screens/LoginScreen";
 import LeaderboardScreen from "./components/screens/LeaderboardScreen";
+import AdminScreen       from "./components/screens/AdminScreen";
+import SuperAdminScreen  from "./components/screens/SuperAdminScreen";
 import "./App.css";
 
 function AppContent() {
@@ -16,6 +18,8 @@ function AppContent() {
   if (!user)      return <LoginScreen />;
 
   if (screen === Screen.LEADERBOARD) return <div className="game-container"><LeaderboardScreen /></div>;
+  if (screen === Screen.ADMIN)       return <div className="game-container"><AdminScreen /></div>;
+  if (screen === Screen.SUPER_ADMIN) return <div className="game-container"><SuperAdminScreen /></div>;
 
   return (
     <div className="game-container">

@@ -1,6 +1,6 @@
 import { tursoQuery, arg } from "./turso";
 
-const DB_INIT_KEY = "math_db_init_v6";
+const DB_INIT_KEY = "math_db_init_v7";
 const SESSION_KEY = "math_session";
 
 export async function hashPassword(password) {
@@ -54,35 +54,57 @@ const TABLE_SCHEMA = (name) =>
      password_hash TEXT    NOT NULL
    )`;
 
-// Exported so scores.js can reuse it in JOIN subqueries
+// Exported so scores.js can reuse it in JOIN subqueries.
+// Includes a literal `role` column so callers can distinguish teachers from students.
 export const ALL_USERS_SQL =
-  `SELECT id, username, display_name, grade, password_hash FROM users_6
+  `SELECT id, username, display_name, grade, password_hash, 'teacher' AS role FROM users_teacher
    UNION ALL
-   SELECT id, username, display_name, grade, password_hash FROM users_7
+   SELECT id, username, display_name, grade, password_hash, 'student' AS role FROM users_6
    UNION ALL
-   SELECT id, username, display_name, grade, password_hash FROM users_8
+   SELECT id, username, display_name, grade, password_hash, 'student' AS role FROM users_7
    UNION ALL
-   SELECT id, username, display_name, grade, password_hash FROM users_9`;
+   SELECT id, username, display_name, grade, password_hash, 'student' AS role FROM users_8
+   UNION ALL
+   SELECT id, username, display_name, grade, password_hash, 'student' AS role FROM users_9`;
+
+// Hardcoded administrator — not stored in any DB table
+const ADMIN_USERNAME = "admin@zenithacademy.org";
+const ADMIN_PASSWORD = "Zenith123$";
 
 // ─── DB init ──────────────────────────────────────────────────────────────────
 
 export async function initDB() {
   if (localStorage.getItem(DB_INIT_KEY)) return;
 
-  // Verify tables exist (they were seeded server-side).
-  // If any are missing for some reason, create and seed them.
-  const check = await tursoQuery([
-    { type: "execute", stmt: { sql: "SELECT COUNT(*) FROM users_6" } },
-  ]).catch(() => null);
+  // Use sqlite_master to reliably detect which tables already exist.
+  const masterRes = await tursoQuery([
+    {
+      type: "execute",
+      stmt: { sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='users_6'" },
+    },
+  ]);
+  const existing = new Set(
+    (masterRes.results[0]?.response?.result?.rows ?? []).map((r) => r[0].value)
+  );
 
-  if (!check) {
-    // Tables missing — create and seed
-    const hash = await hashPassword("Zenith123$");
+  const hash = await hashPassword("Zenith123$");
+
+  // Create / seed student + teacher tables if users_6 is missing
+  if (!existing.has("users_6")) {
     await tursoQuery([
       { type: "execute", stmt: { sql: TABLE_SCHEMA("users_6") } },
       { type: "execute", stmt: { sql: TABLE_SCHEMA("users_7") } },
       { type: "execute", stmt: { sql: TABLE_SCHEMA("users_8") } },
       { type: "execute", stmt: { sql: TABLE_SCHEMA("users_9") } },
+      {
+        type: "execute",
+        stmt: {
+          sql: `CREATE TABLE IF NOT EXISTS users_teacher (
+                  id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE,
+                  display_name TEXT NOT NULL, grade INTEGER NOT NULL DEFAULT 0,
+                  password_hash TEXT NOT NULL)`,
+        },
+      },
     ]);
     await tursoQuery(makeInserts("users_6", 6, SEED_GRADE6, hash));
     await tursoQuery(makeInserts("users_7", 7, SEED_GRADE7, hash));
@@ -95,15 +117,25 @@ export async function initDB() {
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-export async function login(username, rawPassword) {
-  const hash = await hashPassword(rawPassword);
+export async function login(rawUsername, rawPassword) {
+  const username = rawUsername.trim().toLowerCase();
+  const hash     = await hashPassword(rawPassword);
+
+  // Hardcoded administrator — checked before any DB query
+  if (username === ADMIN_USERNAME) {
+    if (hash === await hashPassword(ADMIN_PASSWORD)) {
+      return { id: 0, displayName: "Administrator", grade: 0, username: ADMIN_USERNAME, role: "admin" };
+    }
+    return null; // wrong password for admin
+  }
+
   const data = await tursoQuery([
     {
       type: "execute",
       stmt: {
-        sql: `SELECT id, display_name, grade, username
+        sql: `SELECT id, display_name, grade, username, role
               FROM (${ALL_USERS_SQL})
-              WHERE username = ? AND password_hash = ?
+              WHERE LOWER(username) = ? AND password_hash = ?
               LIMIT 1`,
         args: [arg("text", username), arg("text", hash)],
       },
@@ -116,6 +148,7 @@ export async function login(username, rawPassword) {
     displayName: row[1].value,
     grade:       Number(row[2].value),
     username:    row[3].value,
+    role:        row[4]?.value ?? "student",
   };
 }
 
