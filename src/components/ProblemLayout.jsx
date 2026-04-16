@@ -17,13 +17,25 @@ function BoosterBadge({ type }) {
 // COUNTING
 // ──────────────────────────────────────────────────────────────────
 function CountingLayout({ problem }) {
+  const { count, item, perRow = 5 } = problem;
+
+  // Split items into rows of `perRow`
+  const rows = [];
+  for (let i = 0; i < count; i += perRow) {
+    rows.push(Array.from({ length: Math.min(perRow, count - i) }, (_, j) => i + j));
+  }
+
   return (
     <div className="problem-card counting-layout">
       <BoosterBadge type={problem.booster} />
       <div className="counting-prompt">How many?</div>
-      <div className="counting-items">
-        {Array.from({ length: problem.count }, (_, i) => (
-          <span key={i} className="counting-item">{problem.item}</span>
+      <div className="counting-rows">
+        {rows.map((rowItems, ri) => (
+          <div key={ri} className="counting-row">
+            {rowItems.map((idx) => (
+              <span key={idx} className="counting-item">{item}</span>
+            ))}
+          </div>
         ))}
       </div>
       <AnswerInput />

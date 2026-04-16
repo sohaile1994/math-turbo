@@ -30,17 +30,24 @@ const BOOSTER_LABELS = {
 export { BOOSTER_LABELS };
 
 // ─────────────────────────────────────────────
-// COUNTING
+// COUNTING  (score-based range)
+//   0–4 999  : 1–5
+//   5 000–9 999 : 1–10
+//  10 000–14 999 : 1–15
+//  15 000+  : 1–20
 // ─────────────────────────────────────────────
 const COUNTING_ITEMS = [
   "⚽","⭐","🍎","🎈","🌸","🦋","🍕","🎯","💎","🐸","🔥","🌈","🍦","🦄","🐶",
 ];
 
-export function generateCounting() {
-  const count = randInt(1, 12);
+export function generateCounting(settings = {}) {
+  const score = settings.score ?? 0;
+  const perRow = score >= 25000 ? 10 : 5;
+  const max = 5 + Math.floor(score / 1000);
+  const count = randInt(1, max);
   const item  = pick(COUNTING_ITEMS);
   return {
-    type: "counting", count, item,
+    type: "counting", count, item, perRow,
     answer: count, answerType: "integer",
     displayQuestion: `How many ${item}?`, displayAnswer: String(count),
     booster: maybeBooster(),
@@ -48,52 +55,71 @@ export function generateCounting() {
 }
 
 // ─────────────────────────────────────────────
-// ARITHMETIC
+// ARITHMETIC  (score-based range)
+//
+//  + / −  start 1–9, +4 per 5 000 pts, extra +2 per 10 000 pts, no cap
+//          negatives unlock at 50 000, decimals at 75 000
+//
+//  × / ÷  start 1–5, +2 per 5 000 pts, hard cap at 12
+//          always whole-number results, no negatives/decimals
 // ─────────────────────────────────────────────
 export function generateArithmetic(settings = {}) {
-  const ops      = settings.selectedOps?.length ? settings.selectedOps : ["+","-","×","÷"];
-  const allowNeg = settings.allowNegatives ?? false;
-  const allowDec = settings.allowDecimals  ?? false;
-  const lo       = settings.valueMin ?? 1;
-  const hi       = settings.valueMax ?? 9;
-  const op       = pick(ops);
+  const op    = settings.op ?? "+";
+  const score = settings.score ?? 0;
+
+  let lo = 1, hi;
+  if (op === "×" || op === "÷") {
+    // +1 per 1 000 pts, cap at 12
+    hi = Math.min(12, 5 + Math.floor(score / 1000));
+  } else {
+    // +1 per 1 000 pts, no cap
+    hi = 9 + Math.floor(score / 1000);
+  }
+
+  const allowNeg = (op === "+" || op === "-") && score >= 50000;
+  const allowDec = (op === "+" || op === "-") && score >= 75000;
+
   let a, b, answer, answerType = "integer";
 
   switch (op) {
     case "+":
       a = randInt(lo, hi);
       b = randInt(lo, hi);
-      if (allowNeg && Math.random() < 0.4) b *= -1;
-      answer = a + b;
+      if (allowNeg && Math.random() < 0.4) b = -randInt(lo, hi);
+      if (allowDec && Math.random() < 0.35) {
+        a = Math.round(randInt(lo, hi) * 10 + randInt(0,9)) / 10;
+        b = Math.round(randInt(lo, hi) * 10 + randInt(0,9)) / 10;
+        answerType = "decimal";
+      }
+      answer = Math.round((a + b) * 100) / 100;
       break;
 
     case "-":
       a = randInt(lo, hi);
-      b = randInt(lo, a);
-      if (allowNeg && Math.random() < 0.4) { b = randInt(lo, hi); }
-      answer = a - b;
+      b = allowNeg ? randInt(lo, hi) : randInt(lo, a);
+      if (allowDec && Math.random() < 0.35) {
+        a = Math.round(randInt(lo, hi) * 10 + randInt(1,9)) / 10;
+        b = allowNeg ? Math.round(randInt(lo, hi) * 10 + randInt(0,9)) / 10
+                     : Math.round(a * 10 - randInt(1, Math.floor(a*10))) / 10;
+        answerType = "decimal";
+      }
+      answer = Math.round((a - b) * 100) / 100;
       break;
 
     case "×":
       a = randInt(lo, hi);
       b = randInt(lo, hi);
-      if (allowNeg && Math.random() < 0.4) b *= -1;
       answer = a * b;
       break;
 
-    case "÷":
-      if (allowDec) {
-        b      = pick([2, 4, 5, 8, 10].filter(v => v <= hi));
-        if (!b) b = 2;
-        answer = randInt(lo, hi) + (Math.random() < 0.5 ? 0.5 : 0);
-        a      = b * answer;
-        answerType = Number.isInteger(answer) ? "integer" : "decimal";
-      } else {
-        b      = randInt(lo, hi);
-        answer = randInt(lo, hi);
-        a      = b * answer;
-      }
+    case "÷": {
+      // Pick divisor and quotient so result is always a clean integer
+      const maxDivisor = hi;
+      b      = randInt(1, maxDivisor);
+      answer = randInt(1, Math.max(1, Math.floor(hi / b)));
+      a      = b * answer;
       break;
+    }
 
     default:
       a = 1; b = 1; answer = 2;
@@ -108,24 +134,76 @@ export function generateArithmetic(settings = {}) {
 }
 
 // ─────────────────────────────────────────────
-// PEMDAS
+// PEMDAS  (score-based progression)
+//   0–4 999   : 3 numbers, range 1–5, only + and −
+//   5 000–9 999  : 3 numbers, range 1–5, add × and ÷ mixed with + / −
+//  10 000–19 999 : range 1–9, same variety
+//  20 000–29 999 : range 1–9, two multiplications or simple parens
+//  30 000+   : range 1–9, full multi-step with parens
 // ─────────────────────────────────────────────
-const PEMDAS_TEMPLATES = [
-  () => { const [b,c,a]=[randInt(2,9),randInt(2,9),randInt(1,20)]; return { expr:`${a} + ${b} × ${c}`, ans:a+b*c }; },
-  () => { const [a,b,c]=[randInt(2,8),randInt(2,8),randInt(2,7)];  return { expr:`(${a} + ${b}) × ${c}`, ans:(a+b)*c }; },
-  () => { const [a,b,c]=[randInt(2,9),randInt(2,9),randInt(1,15)]; return { expr:`${a} × ${b} + ${c}`, ans:a*b+c }; },
-  () => { const [a,b,c]=[randInt(2,8),randInt(2,7),randInt(2,7)];  return { expr:`${a} × (${b} + ${c})`, ans:a*(b+c) }; },
-  () => { const b=randInt(2,5),c=randInt(2,5),bc=b*c,a=randInt(bc+1,bc+20); return { expr:`${a} - ${b} × ${c}`, ans:a-bc }; },
-  () => { const [a,b,c,d]=[randInt(2,5),randInt(2,5),randInt(2,4),randInt(2,4)]; return { expr:`(${a}+${b})×(${c}+${d})`, ans:(a+b)*(c+d) }; },
-  () => { const [a,b]=[randInt(3,9),randInt(3,9)], c=randInt(1,a*b-1); return { expr:`${a} × ${b} - ${c}`, ans:a*b-c }; },
+
+// Tier 0 — 3 terms, range 1–5, only + / −
+const PEMDAS_T0 = [
+  () => { const [a,b,c]=[randInt(1,5),randInt(1,5),randInt(1,5)];                return { expr:`${a} + ${b} + ${c}`,   ans:a+b+c }; },
+  () => { const a=randInt(2,5),b=randInt(1,a),c=randInt(1,5);                    return { expr:`${a} - ${b} + ${c}`,   ans:a-b+c }; },
+  () => { const [a,b]=[randInt(2,5),randInt(1,5)],c=randInt(1,a+b);              return { expr:`${a} + ${b} - ${c}`,   ans:a+b-c }; },
+  () => { const a=randInt(3,5),b=randInt(1,a-1),c=randInt(1,b);                  return { expr:`${a} - ${b} - ${c}`,   ans:a-b-c }; },
 ];
 
-export function generatePEMDAS() {
-  let result; let tries = 0;
+// Tier 1 — 3 terms, range 1–5, × or ÷ mixed with + / −
+const PEMDAS_T1 = [
+  ...PEMDAS_T0,
+  () => { const [b,c,a]=[randInt(1,4),randInt(1,4),randInt(1,5)];                return { expr:`${a} + ${b} × ${c}`,   ans:a+b*c }; },
+  () => { const [a,b,c]=[randInt(1,4),randInt(1,4),randInt(1,5)];                return { expr:`${a} × ${b} + ${c}`,   ans:a*b+c }; },
+  () => { const b=randInt(1,3),c=randInt(1,3),bc=b*c,a=randInt(bc+1,bc+5);       return { expr:`${a} - ${b} × ${c}`,   ans:a-b*c }; },
+  () => { const [a,b,c]=[randInt(1,4),randInt(1,4),randInt(1,4)];                return { expr:`${a} × ${b} - ${c}`,   ans:a*b-c }; },
+];
+
+// Tier 2 — range 1–9, one × or ÷ with + / −
+const PEMDAS_T2 = [
+  () => { const [a,b,c]=[randInt(1,9),randInt(1,9),randInt(1,9)];                return { expr:`${a} + ${b} + ${c}`,   ans:a+b+c }; },
+  () => { const a=randInt(2,9),b=randInt(1,a),c=randInt(1,9);                    return { expr:`${a} - ${b} + ${c}`,   ans:a-b+c }; },
+  () => { const [b,c,a]=[randInt(2,8),randInt(2,8),randInt(1,15)];               return { expr:`${a} + ${b} × ${c}`,   ans:a+b*c }; },
+  () => { const [a,b,c]=[randInt(2,9),randInt(2,9),randInt(1,12)];               return { expr:`${a} × ${b} + ${c}`,   ans:a*b+c }; },
+  () => { const b=randInt(2,5),c=randInt(2,5),bc=b*c,a=randInt(bc+1,bc+15);      return { expr:`${a} - ${b} × ${c}`,   ans:a-b*c }; },
+  () => { const [a,b]=[randInt(3,9),randInt(3,9)],c=randInt(1,a*b-1);            return { expr:`${a} × ${b} - ${c}`,   ans:a*b-c }; },
+  () => { const [a,b,c,d]=[randInt(1,9),randInt(2,7),randInt(2,7),randInt(1,8)]; return { expr:`${a} + ${b} × ${c} + ${d}`, ans:a+b*c+d }; },
+];
+
+// Tier 3 — range 1–9, two multiplications or simple parens
+const PEMDAS_T3 = [
+  ...PEMDAS_T2,
+  () => { const [a,b,c]=[randInt(2,7),randInt(2,7),randInt(2,6)];                return { expr:`(${a} + ${b}) × ${c}`, ans:(a+b)*c }; },
+  () => { const [a,b,c]=[randInt(2,7),randInt(2,6),randInt(2,6)];                return { expr:`${a} × (${b} + ${c})`, ans:a*(b+c) }; },
+  () => { const [a,b,c,d]=[randInt(2,6),randInt(2,6),randInt(2,5),randInt(2,5)]; return { expr:`${a} × ${b} + ${c} × ${d}`, ans:a*b+c*d }; },
+  () => { const [a,b,c,d]=[randInt(2,7),randInt(2,7),randInt(2,5),randInt(2,5)]; return { expr:`${a} × ${b} - ${c} × ${d}`, ans:a*b-c*d }; },
+  () => { const [a,b,c,d]=[randInt(2,5),randInt(2,5),randInt(2,5),randInt(1,8)]; return { expr:`(${a} + ${b}) × ${c} + ${d}`, ans:(a+b)*c+d }; },
+];
+
+// Tier 4 — full parenthesised multi-step
+const PEMDAS_T4 = [
+  ...PEMDAS_T3,
+  () => { const [a,b,c,d]=[randInt(2,5),randInt(2,5),randInt(2,4),randInt(2,4)]; return { expr:`(${a}+${b})×(${c}+${d})`,     ans:(a+b)*(c+d) }; },
+  () => { const [a,b,c,d]=[randInt(2,5),randInt(2,5),randInt(3,5),randInt(1,3)]; return { expr:`(${a}+${b})×(${c}-${d})`,     ans:(a+b)*(c-d) }; },
+  () => { const [a,b,c,d]=[randInt(2,4),randInt(2,4),randInt(2,4),randInt(2,4)]; return { expr:`(${a}×${b}) + (${c}×${d})`,   ans:a*b+c*d }; },
+  () => { const [a,b,c,d]=[randInt(2,5),randInt(2,5),randInt(2,5),randInt(1,5)]; return { expr:`${a} × (${b} + ${c}) - ${d}`, ans:a*(b+c)-d }; },
+  () => { const [a,b,c,d,e]=[randInt(2,5),randInt(2,5),randInt(2,4),randInt(2,4),randInt(1,8)]; return { expr:`${a}×${b} + ${c}×${d} - ${e}`, ans:a*b+c*d-e }; },
+];
+
+export function generatePEMDAS(settings = {}) {
+  const score = settings.score ?? 0;
+  let pool;
+  if      (score >= 30000) pool = PEMDAS_T4;
+  else if (score >= 20000) pool = PEMDAS_T3;
+  else if (score >= 10000) pool = PEMDAS_T2;
+  else if (score >= 5000)  pool = PEMDAS_T1;
+  else                     pool = PEMDAS_T0;
+
+  let result, tries = 0;
   do {
-    const t = pick(PEMDAS_TEMPLATES)();
-    result = t; tries++;
-  } while ((!Number.isInteger(result.ans) || result.ans <= 0 || result.ans > 200) && tries < 30);
+    result = pick(pool)();
+    tries++;
+  } while ((!Number.isInteger(result.ans) || result.ans <= 0 || result.ans > 9999) && tries < 40);
 
   return {
     type: "pemdas", expression: result.expr,
@@ -136,68 +214,117 @@ export function generatePEMDAS() {
 }
 
 // ─────────────────────────────────────────────
-// ALGEBRA — 10 templates across 3 difficulties
+// ALGEBRA — score-based progression
+//   0–4 999   : x + ? = ?  or  x - ? = ?
+//   5 000–9 999  : add ?x = ?
+//  10 000–24 999 : add ?x + ? = ?  and  ?x - ? = ?
+//  25 000+   : multi-variable equations (many variations)
 // ─────────────────────────────────────────────
 
-/** Build left-hand side string from a coefficient and optional constant */
-function lhs(a, b) {
-  const xPart = a === 1 ? "x" : `${a}x`;
-  if (b === 0) return xPart;
-  if (b > 0)   return `${xPart} + ${b}`;
-  return `${xPart} - ${Math.abs(b)}`;
+function xStr(a) { return a === 1 ? "x" : `${a}x`; }
+function numStr(n, leadingSign = false) {
+  if (n >= 0) return leadingSign ? `+ ${n}` : String(n);
+  return leadingSign ? `- ${Math.abs(n)}` : String(n);
+}
+function termStr(coef, sign = false) {
+  // e.g. termStr(3) => "3x",  termStr(-2, true) => "- 2x"
+  if (coef === 0) return sign ? "" : "0";
+  const abs = Math.abs(coef);
+  const xp  = abs === 1 ? "x" : `${abs}x`;
+  if (!sign) return coef > 0 ? xp : `-${xp}`;
+  return coef > 0 ? `+ ${xp}` : `- ${xp}`;
 }
 
-// ── Easy templates ───────────────────────────
-const A_EASY = [
-  // t1: ax + b = c  (x positive, a ≤ 3)
-  (neg) => { const a=randInt(1,3), x=randInt(neg?-8:1,10), b=randInt(-8,8), c=a*x+b; return { expression:`${lhs(a,b)} = ${c}`, answer:x }; },
-  // t2: ax - b = c
-  (neg) => { const a=randInt(1,3), x=randInt(neg?-8:1,10), b=randInt(1,10), c=a*x-b; return { expression:`${lhs(a,-b)} = ${c}`, answer:x }; },
-  // t3: ax = c
-  (neg) => { const a=randInt(2,6), x=randInt(neg?-8:1,10), c=a*x; return { expression:`${a}x = ${c}`, answer:x }; },
-  // t4: x + b = c  (a=1)
-  (neg) => { const x=randInt(neg?-8:1,15), b=randInt(1,10), c=x+b; return { expression:`x + ${b} = ${c}`, answer:x }; },
+// Tier 0 (0–4 999): x + ? = ?  /  x − ? = ?  —  all numbers 1–9
+const ALG_T0 = [
+  () => { const b=randInt(1,9), x=randInt(1,9), c=x+b;            return { expression:`x + ${b} = ${c}`,       answer:x }; },
+  () => { const b=randInt(1,8), x=randInt(b+1,9), c=x-b;          return { expression:`x - ${b} = ${c}`,       answer:x }; },
+  () => { const b=randInt(1,9), x=randInt(1,9), c=x+b;            return { expression:`${b} + x = ${c}`,       answer:x }; },
+  () => { const x=randInt(2,9), b=randInt(1,x-1), c=x-b;          return { expression:`x - ${b} = ${c}`,       answer:x }; },
 ];
 
-// ── Medium templates ─────────────────────────
-const A_MEDIUM = [
-  ...A_EASY,
-  // t5: ax + bx = c  (combine like terms, multiple x)
-  (neg) => { const a=randInt(2,5), b=randInt(1,4), x=randInt(neg?-6:1,8), c=(a+b)*x; return { expression:`${a}x + ${b}x = ${c}`, answer:x }; },
-  // t6: ax - bx = c  (a > b)
-  (neg) => { const a=randInt(3,7), b=randInt(1,a-1), x=randInt(neg?-6:1,8), c=(a-b)*x; return { expression:`${a}x - ${b}x = ${c}`, answer:x }; },
-  // t7: x / a = b
-  () => { const a=randInt(2,6), b=randInt(2,10), x=a*b; return { expression:`x ÷ ${a} = ${b}`, answer:x }; },
+// Tier 1 (5 000–9 999): adds ?x = ?  —  numbers still 1–9
+const ALG_T1 = [
+  ...ALG_T0,
+  () => { const a=randInt(2,9), x=randInt(1,9), c=a*x;            return { expression:`${a}x = ${c}`,          answer:x }; },
+  () => { const a=randInt(2,8), x=randInt(1,9), c=a*x;            return { expression:`${xStr(a)} = ${c}`,     answer:x }; },
+  () => { const a=randInt(2,9), x=randInt(1,9), c=a*x;            return { expression:`${c} = ${a}x`,          answer:x }; },
 ];
 
-// ── Hard templates ───────────────────────────
-const A_HARD = [
-  ...A_MEDIUM,
-  // t8: ax + b = cx + d  (variables on both sides, a > c)
-  (neg) => {
-    const a=randInt(3,6), c=randInt(1,a-1), x=randInt(neg?-6:1,8);
-    const b=randInt(-6,6), d=b+(a-c)*x;
-    const right = c===1 ? (d>=0?`x + ${d}`:`x - ${Math.abs(d)}`) : (d>=0?`${c}x + ${d}`:`${c}x - ${Math.abs(d)}`);
-    return { expression:`${lhs(a,b)} = ${right}`, answer:x };
-  },
-  // t9: a(x + b) = c  (distributive)
-  (neg) => {
-    const a=randInt(2,5), b=randInt(1,6), x=randInt(neg?-6:1,8), c=a*(x+b);
-    return { expression:`${a}(x + ${b}) = ${c}`, answer:x };
-  },
-  // t10: x / a + b = c
+// Tier 2 (10 000–24 999): adds ?x + ? = ?  and  ?x − ? = ?
+const ALG_T2 = [
+  ...ALG_T1,
+  () => { const a=randInt(2,6), b=randInt(1,9), x=randInt(1,9), c=a*x+b; return { expression:`${xStr(a)} + ${b} = ${c}`, answer:x }; },
+  () => { const a=randInt(2,6), b=randInt(1,9), x=randInt(1,9), c=a*x-b; return { expression:`${xStr(a)} - ${b} = ${c}`, answer:x }; },
+  () => { const a=randInt(2,5), b=randInt(1,8), x=randInt(1,9), c=a*x+b; return { expression:`${b} + ${xStr(a)} = ${c}`, answer:x }; },
+  () => { const a=randInt(2,4), b=randInt(1,6), x=randInt(1,9), c=a*(x+b); return { expression:`${a}(x + ${b}) = ${c}`, answer:x }; },
+  () => { const a=randInt(2,4), b=randInt(1,5), x=randInt(2,9), c=a*(x-b); return { expression:`${a}(x - ${b}) = ${c}`, answer:x }; },
+  () => { const a=randInt(2,5), b=randInt(1,4), x=randInt(1,8), c=(a+b)*x; return { expression:`${xStr(a)} + ${xStr(b)} = ${c}`, answer:x }; },
+];
+
+// Tier 3: multi-variable — many variations
+const ALG_T3 = [
+  // ?x + ? - ?x = ?  (simplify like terms)
   () => {
-    const a=randInt(2,5), b=randInt(1,8), x=randInt(2,12)*a; // x divisible by a
-    const c=x/a+b;
-    return { expression:`x ÷ ${a} + ${b} = ${c}`, answer:x };
+    const a=randInt(3,8),b=randInt(1,a-1),k=randInt(1,15),x=randInt(1,10);
+    const c=(a-b)*x+k;
+    return { expression:`${xStr(a)} + ${k} - ${xStr(b)} = ${c}`, answer:x };
+  },
+  // ?x - ? = ?x + ?
+  () => {
+    const a=randInt(3,8),b=randInt(1,a-1),k1=randInt(1,10),k2=randInt(1,10),x=randInt(1,8);
+    const c=(a-b)*x; // a·x - k1 = b·x + k2  → (a-b)x = k1+k2 → pick x so clean
+    const rhs = k1+k2; const coef=a-b;
+    if(rhs%coef!==0) { const xx=randInt(1,8); return { expression:`${xStr(a)} - ${k1} = ${xStr(b)} + ${k2}`, answer:Math.round((k1+k2)/coef) }; }
+    return { expression:`${xStr(a)} - ${k1} = ${xStr(b)} + ${k2}`, answer:rhs/coef };
+  },
+  // ?x + ? = ?x + ?
+  () => {
+    const a=randInt(3,7),b=randInt(1,a-1),x=randInt(1,10),d=randInt(1,15),e=d+(a-b)*x;
+    return { expression:`${xStr(a)} + ${d} = ${xStr(b)} + ${e}`, answer:x };
+  },
+  // ?x - ?x + ? = ?
+  () => {
+    const a=randInt(3,8),b=randInt(1,a-1),k=randInt(1,20),x=randInt(1,10),c=(a-b)*x+k;
+    return { expression:`${xStr(a)} - ${xStr(b)} + ${k} = ${c}`, answer:x };
+  },
+  // ?x - ? = ?x - ?
+  () => {
+    const a=randInt(3,7),b=randInt(1,a-1),x=randInt(1,10),e=randInt(1,15),d=e+(a-b)*x;
+    return { expression:`${xStr(a)} - ${d} = ${xStr(b)} - ${e}`, answer:x };
+  },
+  // ?x + ? - ?x = ?  (constant on right)
+  () => {
+    const a=randInt(4,9),b=randInt(1,a-2),k=randInt(1,12),x=randInt(1,8),c=(a-b)*x-k;
+    return { expression:`${xStr(a)} - ${k} - ${xStr(b)} = ${c}`, answer:x };
+  },
+  // ?x + ? + ?x = ?  (add like terms)
+  () => {
+    const a=randInt(2,5),b=randInt(1,3),k=randInt(2,15),x=randInt(1,8),c=(a+b)*x+k;
+    return { expression:`${xStr(a)} + ${k} + ${xStr(b)} = ${c}`, answer:x };
+  },
+  // ? - ?x = ?x + ?  (negative leading)
+  () => {
+    const a=randInt(2,6),b=randInt(1,a-1),k1=randInt(5,30),x=randInt(1,6);
+    const k2=k1-(a+b)*x;
+    if(k2<0) { const xx=randInt(1,3),kk=randInt((a+b)*xx+1,(a+b)*xx+10); return { expression:`${kk} - ${xStr(a)} = ${xStr(b)} + ${kk-(a+b)*xx}`, answer:xx }; }
+    return { expression:`${k1} - ${xStr(a)} = ${xStr(b)} + ${k2}`, answer:x };
   },
 ];
 
 export function generateAlgebra(settings = {}) {
-  const { difficulty = "medium", allowNegatives = false } = settings;
-  const pool = difficulty === "easy" ? A_EASY : difficulty === "hard" ? A_HARD : A_MEDIUM;
-  const fn   = pick(pool);
-  const res  = fn(allowNegatives);
+  const score = settings.score ?? 0;
+  let pool;
+  if      (score >= 25000) pool = [...ALG_T2, ...ALG_T3, ...ALG_T3]; // T3 weighted more
+  else if (score >= 10000) pool = ALG_T2;
+  else if (score >= 5000)  pool = ALG_T1;
+  else                     pool = ALG_T0;
+
+  let res, tries = 0;
+  do {
+    res = pick(pool)();
+    tries++;
+  } while ((typeof res.answer !== "number" || !Number.isInteger(res.answer) || res.answer < 1 || res.answer > 99) && tries < 40);
 
   return {
     type: "algebra",

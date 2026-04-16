@@ -60,7 +60,7 @@ export async function getLeaderboard(subject) {
     {
       type: "execute",
       stmt: {
-        sql: `SELECT u.display_name, u.grade, b.score, b.duration_secs
+        sql: `SELECT u.display_name, u.grade, b.score, b.duration_secs, b.played_at
               FROM best_scores b
               JOIN (${ALL_USERS_SQL}) u ON u.id = b.user_id
               WHERE b.subject = ?
@@ -76,6 +76,7 @@ export async function getLeaderboard(subject) {
     grade:        Number(r[1].value),
     score:        Number(r[2].value),
     durationSecs: Number(r[3].value ?? 0),
+    playedAt:     Number(r[4].value ?? 0),
   }));
 }
 
@@ -96,11 +97,21 @@ export async function getUserStats(userId) {
     },
   ]);
   const rows = data.results[0]?.response?.result?.rows ?? [];
-  const stats = { counting: null, arithmetic: null, pemdas: null, algebra: null };
+  const stats = {
+    counting: null,
+    "arithmetic_+": null, "arithmetic_-": null, "arithmetic_×": null, "arithmetic_÷": null,
+    pemdas: null, algebra: null,
+  };
   rows.forEach((r) => {
     const subj  = r[0].value;
     const score = Number(r[1].value);
     if (subj in stats) stats[subj] = score;
   });
+  // also expose a combined arithmetic best (highest across all ops)
+  const arithBest = Math.max(
+    stats["arithmetic_+"] ?? 0, stats["arithmetic_-"] ?? 0,
+    stats["arithmetic_×"] ?? 0, stats["arithmetic_÷"] ?? 0,
+  );
+  stats.arithmetic = arithBest > 0 ? arithBest : null;
   return stats;
 }

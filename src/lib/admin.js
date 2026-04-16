@@ -112,6 +112,32 @@ export async function addTeacher(displayName, username) {
   return { id: newId, username, displayName };
 }
 
+/** Update a teacher's name and/or email. Optionally change password. */
+export async function updateTeacher(userId, displayName, username, newPassword) {
+  if (newPassword) {
+    const hash = await hashPassword(newPassword);
+    await tursoQuery([
+      {
+        type: "execute",
+        stmt: {
+          sql: "UPDATE users_teacher SET display_name = ?, username = ?, password_hash = ? WHERE id = ?",
+          args: [arg("text", displayName), arg("text", username), arg("text", hash), arg("integer", userId)],
+        },
+      },
+    ]);
+  } else {
+    await tursoQuery([
+      {
+        type: "execute",
+        stmt: {
+          sql: "UPDATE users_teacher SET display_name = ?, username = ? WHERE id = ?",
+          args: [arg("text", displayName), arg("text", username), arg("integer", userId)],
+        },
+      },
+    ]);
+  }
+}
+
 /** Remove a teacher. */
 export async function removeTeacher(userId) {
   await tursoQuery([

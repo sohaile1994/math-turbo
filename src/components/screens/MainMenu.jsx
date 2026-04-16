@@ -2,6 +2,13 @@ import { useState } from "react";
 import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../context/AuthContext";
 import { Category, GameMode } from "../../enums";
+
+const OPS = [
+  { op: "+", label: "Addition",       emoji: "➕" },
+  { op: "-", label: "Subtraction",    emoji: "➖" },
+  { op: "×", label: "Multiplication", emoji: "✖️" },
+  { op: "÷", label: "Division",       emoji: "➗" },
+];
 import StatsModal from "./StatsModal";
 
 const CATEGORIES = [
@@ -44,6 +51,7 @@ export default function MainMenu() {
   const { user, logoutUser, isTeacher, isAdmin }                  = useAuth();
   const [selectedMode, setSelectedMode] = useState(GameMode.COMPETITIVE);
   const [showStats, setShowStats]       = useState(false);
+  const [opPickerCat, setOpPickerCat]   = useState(null); // set to Category when picker open
 
   const isCompetitive = selectedMode === GameMode.COMPETITIVE;
 
@@ -117,7 +125,10 @@ export default function MainMenu() {
               "--card-glow":     cat.glow,
               animationDelay:    `${i * 0.08}s`,
             }}
-            onClick={() => startGame({ category: cat.id, mode: selectedMode })}
+            onClick={() => {
+              if (cat.id === Category.ARITHMETIC) { setOpPickerCat(cat.id); }
+              else startGame({ category: cat.id, mode: selectedMode });
+            }}
           >
             <div className="card-inner">
               <div className="cat-emoji-big">{cat.emoji}</div>
@@ -133,6 +144,28 @@ export default function MainMenu() {
 
       {/* Stats modal */}
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+
+      {/* Arithmetic op picker */}
+      {opPickerCat && (
+        <div className="admin-modal-overlay" onClick={() => setOpPickerCat(null)}>
+          <div className="admin-modal op-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-modal-title">➕ Choose Operation</h3>
+            <div className="op-picker-grid">
+              {OPS.map(({ op, label, emoji }) => (
+                <button
+                  key={op}
+                  className="op-picker-btn"
+                  onClick={() => { setOpPickerCat(null); startGame({ category: opPickerCat, mode: selectedMode, op }); }}
+                >
+                  <span className="op-picker-emoji">{emoji}</span>
+                  <span className="op-picker-label">{label}</span>
+                  <span className="op-picker-symbol">{op}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,12 +6,14 @@ const GameContext = createContext();
 export const GameProvider = ({ children }) => {
   const [screen,     setScreen]     = useState(Screen.MAIN_MENU);
   const [category,   setCategory]   = useState(Category.ARITHMETIC);
+  const [op,         setOp]         = useState("+");   // arithmetic operation
   const [mode,       setMode]       = useState(GameMode.PRACTICE);
   const [finalScore, setFinalScore] = useState(0);
   const [startedAt,  setStartedAt]  = useState(null);
 
-  const startGame = ({ category: cat, mode: m }) => {
+  const startGame = ({ category: cat, mode: m, op: o }) => {
     setCategory(cat);
+    setOp(o ?? "+");
     setMode(m ?? GameMode.PRACTICE);
     setStartedAt(Date.now());
     setScreen(Screen.GAME);
@@ -31,6 +33,7 @@ export const GameProvider = ({ children }) => {
     <GameContext.Provider value={{
       screen,
       category,
+      op,
       mode,
       finalScore,
       startedAt,

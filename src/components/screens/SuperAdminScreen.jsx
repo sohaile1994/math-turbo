@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGame } from "../../context/GameContext";
-import { listTeachers, addTeacher, removeTeacher, resetTeacherPassword } from "../../lib/admin";
+import { listTeachers, addTeacher, removeTeacher, updateTeacher } from "../../lib/admin";
 
 export default function SuperAdminScreen() {
   const { goToMenu } = useGame();
@@ -17,10 +17,13 @@ export default function SuperAdminScreen() {
   const [addSaving, setAddSaving] = useState(false);
   const [addError,  setAddError]  = useState("");
 
-  // Reset-password state
-  const [resetTarget, setResetTarget] = useState(null);
-  const [resetPw,     setResetPw]     = useState("");
-  const [resetSaving, setResetSaving] = useState(false);
+  // Edit state
+  const [editTarget, setEditTarget] = useState(null);
+  const [editName,   setEditName]   = useState("");
+  const [editEmail,  setEditEmail]  = useState("");
+  const [editPw,     setEditPw]     = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError,  setEditError]  = useState("");
 
   useEffect(() => { load(); }, []);
 
@@ -47,6 +50,33 @@ export default function SuperAdminScreen() {
     } finally { setAddSaving(false); }
   }
 
+  function openEdit(t) {
+    setEditTarget(t);
+    setEditName(t.displayName);
+    setEditEmail(t.username);
+    setEditPw("");
+    setEditError("");
+  }
+
+  async function handleEdit(e) {
+    e.preventDefault();
+    if (!editName.trim() || !editEmail.trim()) { setEditError("Name and email are required."); return; }
+    setEditSaving(true); setEditError("");
+    try {
+      const name  = editName.trim();
+      const email = editEmail.trim().toLowerCase();
+      const pw    = editPw.trim() || null;
+      await updateTeacher(editTarget.id, name, email, pw);
+      setTeachers((prev) =>
+        prev.map((t) => t.id === editTarget.id ? { ...t, displayName: name, username: email } : t)
+      );
+      flash(`✓ ${name} updated`);
+      setEditTarget(null);
+    } catch (err) {
+      setEditError(err.message ?? "Could not save changes.");
+    } finally { setEditSaving(false); }
+  }
+
   async function handleRemove(teacher) {
     setConfirmId(null);
     try {
@@ -54,18 +84,6 @@ export default function SuperAdminScreen() {
       setTeachers((prev) => prev.filter((t) => t.id !== teacher.id));
       flash(`✓ ${teacher.displayName} removed`);
     } catch { flash("Could not remove teacher.", true); }
-  }
-
-  async function handleResetPw(e) {
-    e.preventDefault();
-    if (!resetPw.trim()) return;
-    setResetSaving(true);
-    try {
-      await resetTeacherPassword(resetTarget.id, resetPw.trim());
-      flash(`✓ Password reset for ${resetTarget.displayName}`);
-      setResetTarget(null); setResetPw("");
-    } catch { flash("Could not reset password.", true); }
-    finally { setResetSaving(false); }
   }
 
   function flash(msg, isError = false) {
@@ -109,10 +127,10 @@ export default function SuperAdminScreen() {
                 </div>
                 <div className="admin-row-actions">
                   <button
-                    className="admin-reset-btn"
-                    onClick={() => { setResetTarget(t); setResetPw(""); }}
-                    title="Reset password"
-                  >🔑</button>
+                    className="admin-edit-btn"
+                    onClick={() => openEdit(t)}
+                    title="Edit teacher"
+                  >✏️</button>
                   <button
                     className="admin-remove-btn"
                     onClick={() => setConfirmId(t.id)}
@@ -159,6 +177,46 @@ export default function SuperAdminScreen() {
         </div>
       )}
 
+      {/* Edit teacher modal */}
+      {editTarget && (
+        <div className="admin-modal-overlay" onClick={() => setEditTarget(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-modal-title">Edit Teacher</h3>
+            <form onSubmit={handleEdit} className="admin-form">
+              <label className="login-label">Full Name</label>
+              <input
+                className="login-input"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                disabled={editSaving}
+              />
+              <label className="login-label">School Email</label>
+              <input
+                className="login-input"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                disabled={editSaving}
+              />
+              <label className="login-label">New Password <span className="admin-optional">(leave blank to keep current)</span></label>
+              <input
+                className="login-input"
+                placeholder="New password"
+                value={editPw}
+                onChange={(e) => setEditPw(e.target.value)}
+                disabled={editSaving}
+              />
+              {editError && <p className="login-error">{editError}</p>}
+              <div className="admin-modal-btns">
+                <button type="button" className="admin-cancel-btn" onClick={() => setEditTarget(null)}>Cancel</button>
+                <button type="submit" className="login-submit-btn" disabled={editSaving}>
+                  {editSaving ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Confirm remove modal */}
       {confirmId !== null && (() => {
         const t = teachers.find((x) => x.id === confirmId);
@@ -177,31 +235,6 @@ export default function SuperAdminScreen() {
           </div>
         );
       })()}
-
-      {/* Reset password modal */}
-      {resetTarget && (
-        <div className="admin-modal-overlay" onClick={() => setResetTarget(null)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="admin-modal-title">Reset Password</h3>
-            <p className="admin-confirm-text">Set new password for <strong>{resetTarget.displayName}</strong></p>
-            <form onSubmit={handleResetPw} className="admin-form">
-              <input
-                className="login-input"
-                placeholder="New password"
-                value={resetPw}
-                onChange={(e) => setResetPw(e.target.value)}
-                disabled={resetSaving}
-              />
-              <div className="admin-modal-btns">
-                <button type="button" className="admin-cancel-btn" onClick={() => setResetTarget(null)}>Cancel</button>
-                <button type="submit" className="login-submit-btn" disabled={resetSaving || !resetPw.trim()}>
-                  {resetSaving ? "Saving…" : "Reset"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

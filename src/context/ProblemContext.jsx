@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { Category } from "../enums";
 import { useSettings } from "./SettingsContext";
+import { useGame } from "./GameContext";
+import { useScore } from "./ScoreContext";
 import {
   generateCounting,
   generateArithmetic,
@@ -12,9 +14,9 @@ const ProblemContext = createContext();
 
 function generateProblem(category, settings) {
   switch (category) {
-    case Category.COUNTING:   return generateCounting();
+    case Category.COUNTING:   return generateCounting(settings);
     case Category.ARITHMETIC: return generateArithmetic(settings);
-    case Category.PEMDAS:     return generatePEMDAS();
+    case Category.PEMDAS:     return generatePEMDAS(settings);
     case Category.ALGEBRA:    return generateAlgebra(settings);
     default:                  return generateArithmetic(settings);
   }
@@ -22,17 +24,30 @@ function generateProblem(category, settings) {
 
 export const ProblemProvider = ({ children, category }) => {
   const settings    = useSettings();
+  const { op }      = useGame();
+  const { score }   = useScore();
+
   const settingsRef = useRef(settings);
+  const opRef       = useRef(op);
+  const scoreRef    = useRef(score);
 
-  // Keep ref up-to-date so nextProblem always uses latest settings
   useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { opRef.current = op; }, [op]);
+  useEffect(() => { scoreRef.current = score; }, [score]);
 
-  const [problem, setProblem] = useState(() => generateProblem(category, settings));
+  // Always reads the latest score/op from refs — no override needed for normal flow
+  const buildSettings = (override) => ({
+    ...settingsRef.current,
+    op:    opRef.current,
+    score: scoreRef.current,
+    ...(override ?? {}),
+  });
 
-  // settingsOverride lets callers pass fresh settings before the ref syncs
+  const [problem, setProblem] = useState(() => generateProblem(category, buildSettings()));
+
   const nextProblem = useCallback((settingsOverride) => {
-    setProblem(generateProblem(category, settingsOverride ?? settingsRef.current));
-  }, [category]);
+    setProblem(generateProblem(category, buildSettings(settingsOverride)));
+  }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ProblemContext.Provider value={{ problem, nextProblem }}>

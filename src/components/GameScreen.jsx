@@ -68,14 +68,11 @@ function TierBanner({ tier }) {
 
 // ── Inner game content ───────────────────────────────────────────────────────
 function GameContent() {
-  const { endGame, mode, category, startedAt } = useGame();
+  const { endGame, mode, category, op, startedAt } = useGame();
   const { score }          = useScore();
   const { isGameOver }     = useLives();
   const { isExpired }      = useTimer();
-  const {
-    setValueMin, setValueMax,
-    setDifficulty, setAllowNegatives, setAllowDecimals,
-  } = useSettings();
+  useSettings(); // keep provider in scope
   const { nextProblem } = useProblem();
   const { user }        = useAuth();
 
@@ -98,19 +95,18 @@ function GameContent() {
       .catch(() => { personalBest.current = 0; });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // subject key: arithmetic splits by operation, others use category name
+  const subject = category === "arithmetic" ? `arithmetic_${op}` : category;
+
   // Save to leaderboard only when the player beats their personal best.
-  // Fires every time score changes; bails out cheaply if not a new high.
-  // If the browser closes mid-game the last saved high score is already in the DB.
   useEffect(() => {
     if (!isCompetitive || !user || score === 0) return;
-    // Wait until the personal best has loaded (null = still fetching)
     if (personalBest.current === null) return;
-    // Only write to DB when we beat the stored best
     if (score <= personalBest.current) return;
 
-    personalBest.current = score; // update local ref immediately
+    personalBest.current = score;
     const durationSecs = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
-    saveScore(user.id, category, score, durationSecs).catch(() => {});
+    saveScore(user.id, subject, score, durationSecs).catch(() => {});
   }, [score]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // End game when lives or timer run out
@@ -119,34 +115,16 @@ function GameContent() {
   }, [isGameOver, isExpired, endGame]);
 
   // Progressive difficulty (competitive only)
+  // Score flows into generators via ProblemContext's scoreRef — no nextProblem call needed here.
+  // Only show the tier-up banner when the tier actually changes.
   useEffect(() => {
     if (!isCompetitive) return;
     const tier = tierFromScore(score);
     if (tier === tierRef.current) return;
+    const prev = tierRef.current;
     tierRef.current = tier;
 
-    const newMax  = rangeMaxFromTier(tier);
-    const newDiff = difficultyFromTier(tier);
-    const newNegs = negativesFromTier(tier);
-
-    setValueMin(1);
-    setValueMax(newMax);
-    setDifficulty(newDiff);
-    setAllowNegatives(newNegs);
-    setAllowDecimals(false);
-
-    // Regenerate with new settings right away
-    nextProblem({
-      selectedOps:    ["+"],
-      valueMin:       1,
-      valueMax:       newMax,
-      difficulty:     newDiff,
-      allowNegatives: newNegs,
-      allowDecimals:  false,
-    });
-
-    // Show banner (skip on initial mount, tier -1 → 0)
-    if (tier > 0) {
+    if (tier > 0 && prev >= 0) {
       setTierBanner(tier);
       setTimeout(() => setTierBanner(null), 2500);
     }

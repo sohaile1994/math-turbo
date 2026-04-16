@@ -10,6 +10,13 @@ const SUBJECTS = [
   { id: Category.ALGEBRA,    label: "Algebra",      emoji: "🔣" },
 ];
 
+const ARITH_OPS = [
+  { id: "arithmetic_+", label: "Addition",       symbol: "+" },
+  { id: "arithmetic_-", label: "Subtraction",    symbol: "−" },
+  { id: "arithmetic_×", label: "Multiplication", symbol: "×" },
+  { id: "arithmetic_÷", label: "Division",       symbol: "÷" },
+];
+
 const RANK_ICONS = ["🥇", "🥈", "🥉"];
 
 function gradeLabel(g) { return g === 0 ? "Staff" : `${g}th`; }
@@ -22,21 +29,30 @@ function formatDuration(secs) {
   return `${m}m ${s.toString().padStart(2, "0")}s`;
 }
 
+function formatDate(unixSecs) {
+  if (!unixSecs) return null;
+  const d = new Date(unixSecs * 1000);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function LeaderboardScreen() {
   const { goToMenu } = useGame();
-  const [activeTab, setActiveTab]   = useState(Category.ARITHMETIC);
-  const [entries,   setEntries]     = useState([]);
-  const [loading,   setLoading]     = useState(true);
-  const [error,     setError]       = useState("");
+  const [activeTab,  setActiveTab]  = useState(Category.ARITHMETIC);
+  const [activeOp,   setActiveOp]   = useState("arithmetic_+");
+  const [entries,    setEntries]    = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+
+  const subject = activeTab === Category.ARITHMETIC ? activeOp : activeTab;
 
   useEffect(() => {
     setLoading(true);
     setError("");
-    getLeaderboard(activeTab)
+    getLeaderboard(subject)
       .then(setEntries)
       .catch(() => setError("Could not load leaderboard."))
       .finally(() => setLoading(false));
-  }, [activeTab]);
+  }, [subject]);
 
   return (
     <div className="lb-screen">
@@ -60,6 +76,22 @@ export default function LeaderboardScreen() {
           </button>
         ))}
       </div>
+
+      {/* Arithmetic op sub-tabs */}
+      {activeTab === Category.ARITHMETIC && (
+        <div className="lb-op-tabs">
+          {ARITH_OPS.map((o) => (
+            <button
+              key={o.id}
+              className={`lb-op-tab${activeOp === o.id ? " active" : ""}`}
+              onClick={() => setActiveOp(o.id)}
+            >
+              <span className="lb-op-symbol">{o.symbol}</span>
+              <span className="lb-op-label">{o.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       <div className="lb-content">
@@ -99,6 +131,9 @@ export default function LeaderboardScreen() {
                     {gradeLabel(entry.grade)}
                     {formatDuration(entry.durationSecs) && (
                       <span className="lb-duration"> · ⏱ {formatDuration(entry.durationSecs)}</span>
+                    )}
+                    {formatDate(entry.playedAt) && (
+                      <span className="lb-date"> · 📅 {formatDate(entry.playedAt)}</span>
                     )}
                   </span>
                 </div>

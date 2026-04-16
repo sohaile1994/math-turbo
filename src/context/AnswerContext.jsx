@@ -104,14 +104,15 @@ export const AnswerProvider = ({ children }) => {
     setStreak(0);
     setAnswer("");
 
+    // First wrong attempt — warn but no life lost
     if (attempts === 0) {
-      loseLife();
       resetGrade();
       setAttempts(1);
       setFeedback("retry");
       return;
     }
 
+    // Second wrong attempt — now lose a life and show the answer
     loseLife();
     resetGrade();
     setAttempts(0);
