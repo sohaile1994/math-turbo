@@ -121,6 +121,24 @@ button {
   letter-spacing: 0.5px;
 }
 
+/* ── 6-subject layout: [counting] [2×2 arithmetic] [algebra] ── */
+.subject-sections {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  max-height: 280px;
+  align-self: center;
+  width: 100%;
+}
+
+.arithmetic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 /* ── 2×2 Category Grid ── */
 .category-grid-2x2 {
   display: grid;
@@ -1490,6 +1508,23 @@ button {
 }
 .lb-back-btn:hover { background: rgba(167,139,250,0.2); transform: translateX(-2px); }
 .lb-title { font-family: "Fredoka One", sans-serif; font-size: 1.5rem; color: var(--text); }
+
+.lb-subject-sections {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 6px;
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: var(--shadow);
+  align-items: center;
+}
+
+.lb-arithmetic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
 
 .lb-tabs {
   display: grid;

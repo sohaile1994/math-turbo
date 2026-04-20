@@ -2,48 +2,13 @@ import { useState } from "react";
 import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../context/AuthContext";
 import { Category, GameMode } from "../../enums";
-
-const OPS = [
-  { op: "+", label: "Addition",       emoji: "➕" },
-  { op: "-", label: "Subtraction",    emoji: "➖" },
-  { op: "×", label: "Multiplication", emoji: "✖️" },
-  { op: "÷", label: "Division",       emoji: "➗" },
-];
 import StatsModal from "./StatsModal";
 
-const CATEGORIES = [
-  {
-    id: Category.COUNTING,
-    emoji: "🔢",
-    label: "Counting",
-    desc: "Count objects & learn numbers",
-    gradient: "linear-gradient(135deg, #FF6B6B, #FF8E53)",
-    glow: "#FF6B6B",
-  },
-  {
-    id: Category.ARITHMETIC,
-    emoji: "➕",
-    label: "Arithmetic",
-    desc: "+ − × ÷ operations",
-    gradient: "linear-gradient(135deg, #4ECDC4, #44A8D0)",
-    glow: "#4ECDC4",
-  },
-  {
-    id: Category.PEMDAS,
-    emoji: "📐",
-    label: "Order of Ops",
-    desc: "Parentheses & operations",
-    gradient: "linear-gradient(135deg, #A78BFA, #EC4899)",
-    glow: "#A78BFA",
-  },
-  {
-    id: Category.ALGEBRA,
-    emoji: "🔣",
-    label: "Algebra",
-    desc: "Solve for x",
-    gradient: "linear-gradient(135deg, #F59E0B, #EF4444)",
-    glow: "#F59E0B",
-  },
+const ARITHMETIC_OPS = [
+  { op: "+", label: "Addition",       emoji: "➕", gradient: "linear-gradient(135deg,#4ECDC4,#44A8D0)", glow: "#4ECDC4" },
+  { op: "-", label: "Subtraction",    emoji: "➖", gradient: "linear-gradient(135deg,#A78BFA,#EC4899)", glow: "#A78BFA" },
+  { op: "×", label: "Multiplication", emoji: "✖️", gradient: "linear-gradient(135deg,#F59E0B,#EF4444)", glow: "#F59E0B" },
+  { op: "÷", label: "Division",       emoji: "➗", gradient: "linear-gradient(135deg,#6BCB77,#4D9F53)", glow: "#6BCB77" },
 ];
 
 export default function MainMenu() {
@@ -51,9 +16,23 @@ export default function MainMenu() {
   const { user, logoutUser, isTeacher, isAdmin }                  = useAuth();
   const [selectedMode, setSelectedMode] = useState(GameMode.COMPETITIVE);
   const [showStats, setShowStats]       = useState(false);
-  const [opPickerCat, setOpPickerCat]   = useState(null); // set to Category when picker open
 
   const isCompetitive = selectedMode === GameMode.COMPETITIVE;
+
+  function SubjectCard({ gradient, glow, emoji, label, onClick, delay = 0 }) {
+    return (
+      <button
+        className="category-card-2x2"
+        style={{ "--card-gradient": gradient, "--card-glow": glow, animationDelay: `${delay}s` }}
+        onClick={onClick}
+      >
+        <div className="card-inner">
+          <div className="cat-emoji-big">{emoji}</div>
+          <div className="cat-name-big">{label}</div>
+        </div>
+      </button>
+    );
+  }
 
   return (
     <div className={`main-menu${isCompetitive ? " main-menu-competitive" : ""}`}>
@@ -69,7 +48,6 @@ export default function MainMenu() {
         </h1>
         <p className="menu-subtitle">Pick a mode and topic!</p>
 
-        {/* User bar */}
         {user && (
           <div className="menu-user-bar">
             <span className="menu-user-name">👋 {user.displayName}</span>
@@ -106,7 +84,6 @@ export default function MainMenu() {
         </button>
       </div>
 
-      {/* Competitive active banner */}
       {isCompetitive && (
         <div className="comp-active-banner">
           <span className="comp-active-title">🏆 COMPETITIVE MODE</span>
@@ -114,58 +91,46 @@ export default function MainMenu() {
         </div>
       )}
 
-      {/* ── Category grid ── */}
-      <div className="category-grid-2x2">
-        {CATEGORIES.map((cat, i) => (
-          <button
-            key={cat.id}
-            className="category-card-2x2"
-            style={{
-              "--card-gradient": cat.gradient,
-              "--card-glow":     cat.glow,
-              animationDelay:    `${i * 0.08}s`,
-            }}
-            onClick={() => {
-              if (cat.id === Category.ARITHMETIC) { setOpPickerCat(cat.id); }
-              else startGame({ category: cat.id, mode: selectedMode });
-            }}
-          >
-            <div className="card-inner">
-              <div className="cat-emoji-big">{cat.emoji}</div>
-              <div className="cat-name-big">{cat.label}</div>
-              <div className="cat-desc-small">{cat.desc}</div>
-              <div className="card-play-hint">
-                {isCompetitive ? "COMPETE ▶" : "TAP TO PLAY ▶"}
-              </div>
-            </div>
-          </button>
-        ))}
+      {/* ── 6 subject layout: [counting] [+  -] [algebra] ── */
+      /*                                  [×  ÷]            */}
+      <div className="subject-sections">
+        {/* Left: Counting */}
+        <SubjectCard
+          gradient="linear-gradient(135deg,#FF6B6B,#FF8E53)"
+          glow="#FF6B6B"
+          emoji="🔢"
+          label="Counting"
+          delay={0}
+          onClick={() => startGame({ category: Category.COUNTING, mode: selectedMode })}
+        />
+
+        {/* Middle: 4 arithmetic ops */}
+        <div className="arithmetic-grid">
+          {ARITHMETIC_OPS.map(({ op, label, emoji, gradient, glow }, i) => (
+            <SubjectCard
+              key={op}
+              gradient={gradient}
+              glow={glow}
+              emoji={emoji}
+              label={label}
+              delay={i * 0.06}
+              onClick={() => startGame({ category: Category.ARITHMETIC, op, mode: selectedMode })}
+            />
+          ))}
+        </div>
+
+        {/* Right: Algebra */}
+        <SubjectCard
+          gradient="linear-gradient(135deg,#FF9F43,#EE5A24)"
+          glow="#FF9F43"
+          emoji="🔣"
+          label="Algebra"
+          delay={0.24}
+          onClick={() => startGame({ category: Category.ALGEBRA, mode: selectedMode })}
+        />
       </div>
 
-      {/* Stats modal */}
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-
-      {/* Arithmetic op picker */}
-      {opPickerCat && (
-        <div className="admin-modal-overlay" onClick={() => setOpPickerCat(null)}>
-          <div className="admin-modal op-picker-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="admin-modal-title">➕ Choose Operation</h3>
-            <div className="op-picker-grid">
-              {OPS.map(({ op, label, emoji }) => (
-                <button
-                  key={op}
-                  className="op-picker-btn"
-                  onClick={() => { setOpPickerCat(null); startGame({ category: opPickerCat, mode: selectedMode, op }); }}
-                >
-                  <span className="op-picker-emoji">{emoji}</span>
-                  <span className="op-picker-label">{label}</span>
-                  <span className="op-picker-symbol">{op}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

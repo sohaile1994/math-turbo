@@ -1,20 +1,14 @@
 import { useState, useEffect } from "react";
 import { useGame } from "../../context/GameContext";
 import { getLeaderboard } from "../../lib/scores";
-import { Category } from "../../enums";
 
 const SUBJECTS = [
-  { id: Category.COUNTING,   label: "Counting",     emoji: "🔢" },
-  { id: Category.ARITHMETIC, label: "Arithmetic",   emoji: "➕" },
-  { id: Category.PEMDAS,     label: "Order of Ops", emoji: "📐" },
-  { id: Category.ALGEBRA,    label: "Algebra",      emoji: "🔣" },
-];
-
-const ARITH_OPS = [
-  { id: "arithmetic_+", label: "Addition",       symbol: "+" },
-  { id: "arithmetic_-", label: "Subtraction",    symbol: "−" },
-  { id: "arithmetic_×", label: "Multiplication", symbol: "×" },
-  { id: "arithmetic_÷", label: "Division",       symbol: "÷" },
+  { id: "counting",      label: "Counting",       emoji: "🔢" },
+  { id: "arithmetic_+",  label: "Addition",        emoji: "➕" },
+  { id: "arithmetic_-",  label: "Subtraction",     emoji: "➖" },
+  { id: "arithmetic_×",  label: "Multiplication",  emoji: "✖️" },
+  { id: "arithmetic_÷",  label: "Division",        emoji: "➗" },
+  { id: "algebra",       label: "Algebra",         emoji: "🔣" },
 ];
 
 const RANK_ICONS = ["🥇", "🥈", "🥉"];
@@ -37,63 +31,64 @@ function formatDate(unixSecs) {
 
 export default function LeaderboardScreen() {
   const { goToMenu } = useGame();
-  const [activeTab,  setActiveTab]  = useState(Category.ARITHMETIC);
-  const [activeOp,   setActiveOp]   = useState("arithmetic_+");
-  const [entries,    setEntries]    = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState("");
-
-  const subject = activeTab === Category.ARITHMETIC ? activeOp : activeTab;
+  const [activeTab, setActiveTab] = useState("arithmetic_+");
+  const [entries,   setEntries]   = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState("");
 
   useEffect(() => {
     setLoading(true);
     setError("");
-    getLeaderboard(subject)
+    getLeaderboard(activeTab)
       .then(setEntries)
       .catch(() => setError("Could not load leaderboard."))
       .finally(() => setLoading(false));
-  }, [subject]);
+  }, [activeTab]);
 
   return (
     <div className="lb-screen">
-      {/* Header */}
       <div className="lb-header">
         <button className="lb-back-btn" onClick={goToMenu}>← Back</button>
         <h2 className="lb-title">🏆 Leaderboard</h2>
         <div style={{ width: 60 }} />
       </div>
 
-      {/* Subject tabs */}
-      <div className="lb-tabs">
-        {SUBJECTS.map((s) => (
-          <button
-            key={s.id}
-            className={`lb-tab${activeTab === s.id ? " active" : ""}`}
-            onClick={() => setActiveTab(s.id)}
-          >
-            <span className="lb-tab-emoji">{s.emoji}</span>
-            <span className="lb-tab-label">{s.label}</span>
-          </button>
-        ))}
-      </div>
+      <div className="lb-subject-sections">
+        <button
+          className={`lb-tab${activeTab === "counting" ? " active" : ""}`}
+          onClick={() => setActiveTab("counting")}
+        >
+          <span className="lb-tab-emoji">🔢</span>
+          <span className="lb-tab-label">Counting</span>
+        </button>
 
-      {/* Arithmetic op sub-tabs */}
-      {activeTab === Category.ARITHMETIC && (
-        <div className="lb-op-tabs">
-          {ARITH_OPS.map((o) => (
+        <div className="lb-arithmetic-grid">
+          {[
+            { id: "arithmetic_+", label: "Addition",       emoji: "➕" },
+            { id: "arithmetic_-", label: "Subtraction",    emoji: "➖" },
+            { id: "arithmetic_×", label: "Multiplication", emoji: "✖️" },
+            { id: "arithmetic_÷", label: "Division",       emoji: "➗" },
+          ].map((s) => (
             <button
-              key={o.id}
-              className={`lb-op-tab${activeOp === o.id ? " active" : ""}`}
-              onClick={() => setActiveOp(o.id)}
+              key={s.id}
+              className={`lb-tab${activeTab === s.id ? " active" : ""}`}
+              onClick={() => setActiveTab(s.id)}
             >
-              <span className="lb-op-symbol">{o.symbol}</span>
-              <span className="lb-op-label">{o.label}</span>
+              <span className="lb-tab-emoji">{s.emoji}</span>
+              <span className="lb-tab-label">{s.label}</span>
             </button>
           ))}
         </div>
-      )}
 
-      {/* Content */}
+        <button
+          className={`lb-tab${activeTab === "algebra" ? " active" : ""}`}
+          onClick={() => setActiveTab("algebra")}
+        >
+          <span className="lb-tab-emoji">🔣</span>
+          <span className="lb-tab-label">Algebra</span>
+        </button>
+      </div>
+
       <div className="lb-content">
         {loading && (
           <div className="lb-loading">
@@ -102,9 +97,7 @@ export default function LeaderboardScreen() {
           </div>
         )}
 
-        {!loading && error && (
-          <p className="login-error">{error}</p>
-        )}
+        {!loading && error && <p className="login-error">{error}</p>}
 
         {!loading && !error && entries.length === 0 && (
           <div className="lb-empty">
