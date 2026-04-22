@@ -45,6 +45,8 @@ export default function LeaderboardScreen() {
       .finally(() => setLoading(false));
   }, [activeTab]);
 
+  const activeSub = SUBJECTS.find(s => s.id === activeTab);
+
   return (
     <div className="lb-screen">
       <div className="lb-header">
@@ -53,40 +55,51 @@ export default function LeaderboardScreen() {
         <div style={{ width: 60 }} />
       </div>
 
-      <div className="lb-subject-sections">
-        <button
-          className={`lb-tab${activeTab === "counting" ? " active" : ""}`}
-          onClick={() => setActiveTab("counting")}
-        >
-          <span className="lb-tab-emoji">🔢</span>
-          <span className="lb-tab-label">Counting</span>
-        </button>
+      <div className="lb-subject-bar-wrap">
+        <p className="lb-subject-hint">Tap a subject to view rankings</p>
+        <div className="lb-subject-grid">
+          <button
+            className={`lb-subject-btn${activeTab === "counting" ? " active" : ""}`}
+            onClick={() => setActiveTab("counting")}
+          >
+            {activeTab === "counting" && <span className="lb-subject-check">✓</span>}
+            <span className="lb-subject-emoji">🔢</span>
+            <span className="lb-subject-label">Counting</span>
+          </button>
 
-        <div className="lb-arithmetic-grid">
-          {[
-            { id: "arithmetic_+", label: "Addition",       emoji: "➕" },
-            { id: "arithmetic_-", label: "Subtraction",    emoji: "➖" },
-            { id: "arithmetic_×", label: "Multiplication", emoji: "✖️" },
-            { id: "arithmetic_÷", label: "Division",       emoji: "➗" },
-          ].map((s) => (
-            <button
-              key={s.id}
-              className={`lb-tab${activeTab === s.id ? " active" : ""}`}
-              onClick={() => setActiveTab(s.id)}
-            >
-              <span className="lb-tab-emoji">{s.emoji}</span>
-              <span className="lb-tab-label">{s.label}</span>
-            </button>
-          ))}
+          <div className="lb-arithmetic-grid">
+            {[
+              { id: "arithmetic_+", label: "Addition",       emoji: "➕" },
+              { id: "arithmetic_-", label: "Subtraction",    emoji: "➖" },
+              { id: "arithmetic_×", label: "Multiplication", emoji: "✖️" },
+              { id: "arithmetic_÷", label: "Division",       emoji: "➗" },
+            ].map((s) => (
+              <button
+                key={s.id}
+                className={`lb-subject-btn${activeTab === s.id ? " active" : ""}`}
+                onClick={() => setActiveTab(s.id)}
+              >
+                {activeTab === s.id && <span className="lb-subject-check">✓</span>}
+                <span className="lb-subject-emoji">{s.emoji}</span>
+                <span className="lb-subject-label">{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            className={`lb-subject-btn${activeTab === "algebra" ? " active" : ""}`}
+            onClick={() => setActiveTab("algebra")}
+          >
+            {activeTab === "algebra" && <span className="lb-subject-check">✓</span>}
+            <span className="lb-subject-emoji">🔣</span>
+            <span className="lb-subject-label">Algebra</span>
+          </button>
         </div>
+      </div>
 
-        <button
-          className={`lb-tab${activeTab === "algebra" ? " active" : ""}`}
-          onClick={() => setActiveTab("algebra")}
-        >
-          <span className="lb-tab-emoji">🔣</span>
-          <span className="lb-tab-label">Algebra</span>
-        </button>
+      <div className="lb-active-label">
+        <span>{activeSub.emoji}</span>
+        <span>{activeSub.label} Rankings</span>
       </div>
 
       <div className="lb-content">
