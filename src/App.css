@@ -41,12 +41,13 @@ button {
    LAYOUT SHELL
 ═══════════════════════════════════════════════════════════════ */
 .game-container {
-  max-width: 640px;
+  max-width: 480px;
   margin: 0 auto;
   padding: 8px 10px 16px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -512,6 +513,7 @@ button {
 .division-layout {
   flex-direction: row !important;
   align-items: center;
+  justify-content: space-around;
   gap: 20px;
 }
 .fraction {
@@ -1363,6 +1365,27 @@ button {
   .category-grid-2x2  { gap: 5px; }
   .card-inner         { padding: 6px 4px; gap: 2px; }
   .cat-emoji-big      { font-size: clamp(1.2rem, 4vw, 1.6rem); }
+}
+
+/* ── Game panel short-screen compression ── */
+@media (max-height: 780px) {
+  .game-panel          { gap: 5px; padding: 8px 10px 10px; }
+  .calc-key            { padding: 8px 4px; }
+  .problem-card        { min-height: 100px; padding: 8px 12px; }
+}
+
+@media (max-height: 680px) {
+  .game-panel          { gap: 4px; padding: 6px 8px 8px; }
+  .calc                { gap: 5px; }
+  .calc-action-row     { gap: 5px; }
+  .calc-grid           { gap: 5px; }
+  .calc-key            { padding: 6px 4px; font-size: 0.92rem; }
+  .problem-card        { min-height: 70px; padding: 6px 10px; gap: 5px; }
+  .feedback-placeholder{ min-height: 1.6rem; }
+  .booster-area        { min-height: 16px; gap: 3px; }
+  .score-display       { font-size: clamp(1rem, 3vw, 1.3rem); }
+  .answer-input        { font-size: 1.3rem; padding: 4px 8px; }
+  .quit-game-btn-inline{ padding: 6px 10px; font-size: 0.8rem; margin-top: 2px; }
 }
 
 /* ── Whole menu tint in competitive mode ── */

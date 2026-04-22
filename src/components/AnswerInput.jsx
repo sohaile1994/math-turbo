@@ -3,26 +3,23 @@ import { useAnswer } from "../context/AnswerContext";
 
 export default function AnswerInput() {
   const { answer, setAnswer, submit, locked } = useAnswer();
-  const lastKeyTime = useRef(0);
-  const THROTTLE = 80;
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const handleKey = (e) => {
       if (locked) return;
-
-      const now = Date.now();
-      if (now - lastKeyTime.current < THROTTLE) return;
-      lastKeyTime.current = now;
+      // If the input is already focused, let the native input handle it
+      if (document.activeElement === inputRef.current) return;
 
       if (e.key === "Enter") {
         submit();
         return;
       }
 
-      // Allow digits, minus sign, decimal point
-      if (/^[0-9.\-]$/.test(e.key)) {
+      if (/^[0-9\-]$/.test(e.key) || (e.key === "." && !answer.includes("."))) {
         e.preventDefault();
         setAnswer(prev => prev + e.key);
+        inputRef.current?.focus();
         return;
       }
 
@@ -34,14 +31,24 @@ export default function AnswerInput() {
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [submit, setAnswer, locked]);
+  }, [submit, setAnswer, locked, answer]);
+
+  const handleChange = (e) => {
+    if (locked) return;
+    const val = e.target.value;
+    // Block a second decimal point
+    if ((val.match(/\./g) || []).length > 1) return;
+    setAnswer(val);
+  };
 
   return (
     <div className="answer-row">
       <input
+        ref={inputRef}
         className="answer-input"
         value={answer}
-        onChange={e => !locked && setAnswer(e.target.value)}
+        onChange={handleChange}
+        onKeyDown={e => e.key === "Enter" && submit()}
         disabled={locked}
         placeholder="?"
         style={{ textAlign: "center" }}
