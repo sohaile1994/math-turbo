@@ -19,7 +19,7 @@ export default function AdminScreen() {
   // Add-form state
   const [addName,   setAddName]   = useState("");
   const [addGrade,  setAddGrade]  = useState(1);
-  const [addEmail,  setAddEmail]  = useState("");
+  const [addEmail,  setAddEmail]  = useState("@zenithacademy.org");
   const [addSaving, setAddSaving] = useState(false);
   const [addError,  setAddError]  = useState("");
 
@@ -53,7 +53,7 @@ export default function AdminScreen() {
       const s = await addStudent(addName.trim(), gradeAdded, addEmail.trim().toLowerCase());
       setStudents((prev) => [...prev, s]);
       setActiveGrade(gradeAdded);
-      setAddName(""); setAddEmail("");
+      setAddName(""); setAddEmail("@zenithacademy.org");
       setShowAddForm(false);
       flash(`✓ ${s.displayName} added to ${gradeName(gradeAdded)}`);
     } catch (err) {
