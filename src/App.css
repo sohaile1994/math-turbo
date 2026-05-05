@@ -60,7 +60,6 @@ button {
   /* Fit exactly in the viewport — container has 8px top + 16px bottom padding */
   height: calc(100dvh - 24px);
   min-height: 0;
-  overflow: hidden;
   animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 
@@ -125,19 +124,25 @@ button {
 /* ── 6-subject layout: [counting] [2×2 arithmetic] [algebra] ── */
 .subject-sections {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 0.65fr 2fr 0.65fr;
   gap: 8px;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   max-height: 280px;
   align-self: center;
-  width: 100%;
+  width: 95%;
+}
+
+.subject-sections > * {
+  min-width: 0;
 }
 
 .arithmetic-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  min-width: 0;
 }
 
 /* ── 2×2 Category Grid ── */
@@ -154,9 +159,9 @@ button {
   border: none;
   border-radius: 22px;
   padding: 0;
+  min-width: 0;
   /* No fixed aspect-ratio — cards fill the grid rows naturally */
   min-height: 70px;
-  overflow: hidden;
   position: relative;
   box-shadow: 0 6px 24px rgba(0,0,0,0.12), 0 0 0 3px rgba(255,255,255,0.8);
   transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
@@ -218,7 +223,8 @@ button {
   font-size: clamp(0.9rem, 3.5vw, 1.2rem);
   color: #fff;
   text-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  line-height: 1;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .cat-desc-small {
@@ -1510,7 +1516,8 @@ button {
   flex-direction: column;
   gap: 16px;
   animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  min-height: 100%;
+  height: calc(100dvh - 24px);
+  min-height: 0;
 }
 .lb-header {
   display: flex;
@@ -1631,7 +1638,7 @@ button {
   animation: fadeIn 0.2s ease;
 }
 
-.lb-content { flex: 1; }
+.lb-content { flex: 1; overflow-y: auto; min-height: 0; }
 .lb-loading {
   display: flex;
   flex-direction: column;
@@ -1674,6 +1681,8 @@ button {
 .lb-rank-num { font-family: "Fredoka One", sans-serif; font-size: 1rem; color: var(--muted); }
 .lb-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .lb-name  { font-weight: 800; font-size: 0.95rem; color: var(--text); }
+.lb-row-clickable { cursor: pointer; transition: background 0.15s, transform 0.1s; }
+.lb-row-clickable:hover { background: rgba(99,102,241,0.07); transform: translateX(2px); }
 .lb-grade { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
 .lb-duration { color: var(--purple); font-weight: 700; }
 .lb-date     { color: var(--muted);  font-weight: 600; }
@@ -1714,6 +1723,27 @@ button {
 .stats-subj-label { font-family: "Fredoka One", sans-serif; font-size: 0.85rem; line-height: 1; }
 .stats-subj-score { font-family: "Fredoka One", sans-serif; font-size: 1.4rem; line-height: 1; margin-top: 4px; }
 .stats-subj-pts   { font-size: 0.65rem; opacity: 0.85; font-weight: 700; }
+
+.stats-privacy-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--border, rgba(0,0,0,0.1));
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.stats-privacy-btn:hover:not(:disabled) { background: rgba(0,0,0,0.05); color: var(--text); }
+.stats-privacy-btn.stats-privacy-hidden {
+  border-color: rgba(239,68,68,0.4);
+  color: #EF4444;
+  background: rgba(239,68,68,0.06);
+}
+.stats-privacy-btn:disabled { opacity: 0.5; cursor: default; }
 
 /* ═══════════════════════════════════════════════
    ADMIN PANEL

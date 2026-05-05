@@ -2,21 +2,23 @@ import { useState, useEffect } from "react";
 import { useGame }  from "../../context/GameContext";
 import { listStudents, addStudent, removeStudent, updateStudent } from "../../lib/admin";
 
-const GRADES = [6, 7, 8, 9];
+const GRADES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+function gradeTabLabel(g) { return g === 0 ? "K" : `Grade ${g}`; }
+function gradeName(g) { return g === 0 ? "Kindergarten" : `grade ${g}`; }
 
 export default function AdminScreen() {
   const { goToMenu } = useGame();
 
   const [students,    setStudents]    = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const [activeGrade, setActiveGrade] = useState(6);
+  const [activeGrade, setActiveGrade] = useState(1);
   const [showAddForm, setShowAddForm] = useState(false);
   const [confirmId,   setConfirmId]   = useState(null);
   const [statusMsg,   setStatusMsg]   = useState("");
 
   // Add-form state
   const [addName,   setAddName]   = useState("");
-  const [addGrade,  setAddGrade]  = useState(6);
+  const [addGrade,  setAddGrade]  = useState(1);
   const [addEmail,  setAddEmail]  = useState("");
   const [addSaving, setAddSaving] = useState(false);
   const [addError,  setAddError]  = useState("");
@@ -47,12 +49,13 @@ export default function AdminScreen() {
     if (!addName.trim() || !addEmail.trim()) { setAddError("Name and email are required."); return; }
     setAddSaving(true); setAddError("");
     try {
-      const s = await addStudent(addName.trim(), addGrade, addEmail.trim().toLowerCase());
+      const gradeAdded = addGrade;
+      const s = await addStudent(addName.trim(), gradeAdded, addEmail.trim().toLowerCase());
       setStudents((prev) => [...prev, s]);
-      setActiveGrade(addGrade);
-      setAddName(""); setAddEmail(""); setAddGrade(6);
+      setActiveGrade(gradeAdded);
+      setAddName(""); setAddEmail("");
       setShowAddForm(false);
-      flash(`✓ ${s.displayName} added to grade ${addGrade}`);
+      flash(`✓ ${s.displayName} added to ${gradeName(gradeAdded)}`);
     } catch (err) {
       setAddError(err.message ?? "Could not add student.");
     } finally { setAddSaving(false); }
@@ -107,8 +110,8 @@ export default function AdminScreen() {
       <div className="admin-header">
         <button className="lb-back-btn" onClick={goToMenu}>← Menu</button>
         <h2 className="admin-title">⚙️ Admin Panel</h2>
-        <button className="admin-add-btn" onClick={() => { setShowAddForm(true); setAddError(""); }}>
-          + Add Student
+        <button className="admin-add-btn" onClick={() => { setAddGrade(activeGrade); setShowAddForm(true); setAddError(""); }}>
+          + Add to {gradeTabLabel(activeGrade)}
         </button>
       </div>
 
@@ -126,7 +129,7 @@ export default function AdminScreen() {
             className={`lb-tab${activeGrade === g ? " active" : ""}`}
             onClick={() => setActiveGrade(g)}
           >
-            <span className="lb-tab-label">Grade {g}</span>
+            <span className="lb-tab-label">{gradeTabLabel(g)}</span>
             <span className="admin-grade-count">
               {students.filter((s) => s.grade === g).length}
             </span>
@@ -141,7 +144,7 @@ export default function AdminScreen() {
         ) : gradeStudents.length === 0 ? (
           <div className="lb-empty">
             <div className="lb-empty-icon">📭</div>
-            <p>No students in grade {activeGrade}.</p>
+            <p>No students in {gradeName(activeGrade)}.</p>
           </div>
         ) : (
           <div className="admin-list">
@@ -190,7 +193,7 @@ export default function AdminScreen() {
                 onChange={(e) => setAddGrade(Number(e.target.value))}
                 disabled={addSaving}
               >
-                {GRADES.map((g) => <option key={g} value={g}>Grade {g}</option>)}
+                {GRADES.map((g) => <option key={g} value={g}>{gradeTabLabel(g)}</option>)}
               </select>
               <label className="login-label">School Email</label>
               <input
