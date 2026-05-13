@@ -69,13 +69,6 @@ export default function LoginScreen() {
             <span className="title-blaster">TURBO</span>
           </h1>
           <p className="menu-subtitle">Log in to play!</p>
-          <button
-            className="guest-login-btn"
-            onClick={handleGuestLogin}
-            disabled={initializing}
-          >
-            Play as Guest
-          </button>
         </div>
 
         {/* ── Body ── */}
@@ -137,6 +130,19 @@ export default function LoginScreen() {
               disabled={loading}
             >
               {loading ? "Logging in…" : "Play! ▶"}
+            </button>
+
+            <div className="login-or-divider">
+              <span>or</span>
+            </div>
+
+            <button
+              type="button"
+              className="guest-login-btn"
+              onClick={handleGuestLogin}
+              disabled={loading || initializing}
+            >
+              🎮 Play as Guest
             </button>
 
             <button
