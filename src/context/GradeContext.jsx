@@ -1,28 +1,21 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import { createContext, useContext, useState, useRef, useCallback } from "react";
 import { GradeLevel } from "../enums";
 
 const GradeContext = createContext();
 
-// How many consecutive correct answers are needed per grade tier
-const GRADE_THRESHOLDS = [
-  { grade: GradeLevel.D,   minCombo: 0  },
-  { grade: GradeLevel.C,   minCombo: 3  },
-  { grade: GradeLevel.B,   minCombo: 6  },
-  { grade: GradeLevel.A,   minCombo: 10 },
-  { grade: GradeLevel.S,   minCombo: 15 },
-  { grade: GradeLevel.SS,  minCombo: 21 },
-  { grade: GradeLevel.SSS, minCombo: 28 },
-];
-
-export const GRADE_MULTIPLIERS = {
-  [GradeLevel.D]:   1,
-  [GradeLevel.C]:   1.5,
-  [GradeLevel.B]:   2,
-  [GradeLevel.A]:   3,
-  [GradeLevel.S]:   5,
-  [GradeLevel.SS]:  7,
-  [GradeLevel.SSS]: 10,
-};
+// SSS thresholds mirror GameOver: algebra = 35,000, everything else = 100,000.
+// 7 equally-spaced tiers from 0 → SSS.
+export function gradeFromScore(score, category) {
+  const sss  = category === "algebra" ? 35000 : 100000;
+  const step = sss / 6;
+  if (score >= Math.round(step * 6)) return GradeLevel.SSS;
+  if (score >= Math.round(step * 5)) return GradeLevel.SS;
+  if (score >= Math.round(step * 4)) return GradeLevel.S;
+  if (score >= Math.round(step * 3)) return GradeLevel.A;
+  if (score >= Math.round(step * 2)) return GradeLevel.B;
+  if (score >= Math.round(step * 1)) return GradeLevel.C;
+  return GradeLevel.D;
+}
 
 export const GRADE_COLORS = {
   [GradeLevel.D]:   "#9CA3AF",
@@ -34,40 +27,14 @@ export const GRADE_COLORS = {
   [GradeLevel.SSS]: "#FF6B9D",
 };
 
-function gradeFromCombo(combo) {
-  for (let i = GRADE_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (combo >= GRADE_THRESHOLDS[i].minCombo) return GRADE_THRESHOLDS[i].grade;
-  }
-  return GradeLevel.D;
-}
 
 export const GradeProvider = ({ children }) => {
   const [combo, setCombo]               = useState(0);
-  const [grade, setGrade]               = useState(GradeLevel.D);
   const [frozen, setFrozen]             = useState(false);
   const [freezeSecsLeft, setFreezeSecsLeft] = useState(0);
 
-  // Use refs so setInterval callbacks see the latest values without restarts
-  const frozenRef           = useRef(false);
-  const decayIntervalRef    = useRef(null);
-  const freezeCountdownRef  = useRef(null);
-
-  const decayMs = 1500;
-
-  // Sync grade whenever combo changes
-  useEffect(() => {
-    setGrade(gradeFromCombo(combo));
-  }, [combo]);
-
-  // Decay loop — restarts only when decayMs changes (i.e. never mid-game)
-  useEffect(() => {
-    decayIntervalRef.current = setInterval(() => {
-      if (!frozenRef.current) {
-        setCombo(c => Math.max(0, c - 1));
-      }
-    }, decayMs);
-    return () => clearInterval(decayIntervalRef.current);
-  }, [decayMs]);
+  const frozenRef          = useRef(false);
+  const freezeCountdownRef = useRef(null);
 
   const incrementCombo = useCallback((double = false) => {
     setCombo(c => c + (double ? 2 : 1));
@@ -99,10 +66,8 @@ export const GradeProvider = ({ children }) => {
   return (
     <GradeContext.Provider value={{
       combo,
-      grade,
       frozen,
       freezeSecsLeft,
-      multiplier: GRADE_MULTIPLIERS[grade] ?? 1,
       incrementCombo,
       resetGrade,
       activateGradeFreeze,

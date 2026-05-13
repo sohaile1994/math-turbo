@@ -330,16 +330,27 @@ button {
 /* ── Lives display ── */
 .lives-display {
   display: flex;
-  gap: 4px;
+  justify-content: center;
+  gap: 10px;
+  margin: 2px 0 4px;
 }
-.life-heart {
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 1px 3px rgba(255,0,0,0.3));
+.life-x {
+  font-family: "Fredoka One", sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #FF6B6B;
+  -webkit-text-stroke: 2px #FF6B6B;
+  paint-order: stroke fill;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.7), 0 2px 4px rgba(0,0,0,0.3);
 }
-.life-heart.dead {
-  opacity: 0.2;
-  filter: grayscale(1);
+.life-x.alive {
+  opacity: 1;
+}
+.life-x.dead {
+  opacity: 0.18;
+  text-shadow: none;
 }
 
 /* ── Score display ── */
@@ -968,6 +979,55 @@ button {
   background-clip: text;
 }
 
+.go-bonus-breakdown {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.go-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.9rem;
+  gap: 8px;
+}
+.go-breakdown-row.base {
+  color: var(--muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.go-breakdown-row.grade-row { color: #B8860B; }
+.go-breakdown-row.lives-row { color: #C0392B; }
+.go-bd-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.go-bd-pct {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.go-bd-xs {
+  display: inline-flex;
+  gap: 3px;
+  color: #FF6B6B;
+  font-size: 0.85rem;
+}
+.go-bd-value {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.go-bd-value.positive { font-size: 1rem; }
+
 .go-message {
   font-size: 1rem;
   font-weight: 600;
@@ -975,6 +1035,65 @@ button {
   text-align: center;
   max-width: 300px;
   line-height: 1.6;
+}
+
+.go-guest-save {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.go-guest-save-label {
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+.go-guest-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.go-guest-input {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  font-family: "Nunito", sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.go-guest-input:focus { border-color: var(--purple); }
+.go-guest-input::placeholder { color: rgba(255,255,255,0.3); }
+.go-guest-submit-btn {
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 0.95rem;
+  padding: 9px 18px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.go-guest-submit-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.go-guest-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.go-guest-error {
+  font-family: "Nunito", sans-serif;
+  font-size: 0.82rem;
+  color: #FF6B6B;
+  margin: 0;
+  text-align: center;
 }
 
 .menu-btn {
@@ -1118,6 +1237,25 @@ button {
 }
 .login-submit-btn:active:not(:disabled) { transform: scale(0.97); }
 .login-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.guest-login-btn {
+  margin-top: 10px;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 14px;
+  padding: 10px 28px;
+  font-family: "Fredoka One", sans-serif;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 0.3px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.guest-login-btn:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.55);
+  color: #fff;
+  background: rgba(255,255,255,0.07);
+}
+.guest-login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .reset-pw-link {
   background: none;

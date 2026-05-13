@@ -16,27 +16,11 @@ export default function AnswerFeedback() {
   if (!feedback) return <div className="feedback-placeholder" />;
 
   if (feedback === "correct") {
-    const msg   = STREAK_MESSAGES[streak] ?? "Correct!";
-    const scale = 1 + (streak - 1) * 0.12; // grows with each streak level
+    const msg = STREAK_MESSAGES[streak] ?? "Correct!";
     return (
-      <div
-        key={feedbackKey}
-        className="feedback correct-fb"
-        style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
-      >
+      <div key={feedbackKey} className="feedback correct-fb">
         <span>{msg}</span>
         {pointsEarned != null && <span className="pts-badge">+{pointsEarned}</span>}
-      </div>
-    );
-  }
-
-  if (feedback === "streak7") {
-    return (
-      <div key={feedbackKey} className="feedback streak7-fb">
-        <span className="streak7-crown">🌟</span>
-        <span>PERFECT 7!</span>
-        <span className="pts-badge">+{pointsEarned}</span>
-        <span className="streak7-crown">🌟</span>
       </div>
     );
   }

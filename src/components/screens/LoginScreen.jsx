@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { initDB, login } from "../../lib/auth";
-import { initScoresDB } from "../../lib/scores";
+import { initScoresDB, initGuestScoresDB } from "../../lib/scores";
 import ResetPasswordModal from "./ResetPasswordModal";
 
 export default function LoginScreen() {
@@ -16,8 +16,12 @@ export default function LoginScreen() {
   const [initError,    setInitError]    = useState("");
   const [showReset,    setShowReset]    = useState(false);
 
+  function handleGuestLogin() {
+    loginUser({ id: null, displayName: "Guest", grade: null, role: "guest" });
+  }
+
   useEffect(() => {
-    Promise.all([initDB(), initScoresDB()])
+    Promise.all([initDB(), initScoresDB(), initGuestScoresDB()])
       .catch((err) => {
         console.error("DB init failed:", err);
         setInitError(
@@ -62,9 +66,16 @@ export default function LoginScreen() {
           <h1 className="menu-title">
             <span className="title-math">MATH</span>
             <br />
-            <span className="title-blaster">BLASTER</span>
+            <span className="title-blaster">TURBO</span>
           </h1>
           <p className="menu-subtitle">Log in to play!</p>
+          <button
+            className="guest-login-btn"
+            onClick={handleGuestLogin}
+            disabled={initializing}
+          >
+            Play as Guest
+          </button>
         </div>
 
         {/* ── Body ── */}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useGame } from "../../context/GameContext";
-import { getLeaderboard } from "../../lib/scores";
+import { useAuth } from "../../context/AuthContext";
+import { getLeaderboard, getGuestLeaderboard } from "../../lib/scores";
+import StatsModal from "./StatsModal";
 
 const SUBJECTS = [
   { id: "counting",      label: "Counting",       emoji: "🔢" },
@@ -13,7 +15,11 @@ const SUBJECTS = [
 
 const RANK_ICONS = ["🥇", "🥈", "🥉"];
 
-function gradeLabel(g) { return g === 0 ? "Staff" : `${g}th`; }
+function gradeLabel(g) {
+  if (g === 0) return "K";
+  const suffix = g === 1 ? "st" : g === 2 ? "nd" : g === 3 ? "rd" : "th";
+  return `${g}${suffix}`;
+}
 
 function formatDuration(secs) {
   if (!secs) return null;
@@ -31,19 +37,24 @@ function formatDate(unixSecs) {
 
 export default function LeaderboardScreen() {
   const { goToMenu } = useGame();
-  const [activeTab, setActiveTab] = useState("arithmetic_+");
-  const [entries,   setEntries]   = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState("");
+  const { user }     = useAuth();
+  const isGuest      = user?.role === "guest";
+
+  const [activeTab,    setActiveTab]    = useState("arithmetic_+");
+  const [entries,      setEntries]      = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     setLoading(true);
     setError("");
-    getLeaderboard(activeTab)
+    const fetch = isGuest ? getGuestLeaderboard(activeTab) : getLeaderboard(activeTab);
+    fetch
       .then(setEntries)
       .catch(() => setError("Could not load leaderboard."))
       .finally(() => setLoading(false));
-  }, [activeTab]);
+  }, [activeTab, isGuest]);
 
   const activeSub = SUBJECTS.find(s => s.id === activeTab);
 
@@ -51,7 +62,9 @@ export default function LeaderboardScreen() {
     <div className="lb-screen">
       <div className="lb-header">
         <button className="lb-back-btn" onClick={goToMenu}>← Back</button>
-        <h2 className="lb-title">🏆 Leaderboard</h2>
+        <h2 className="lb-title">
+          {isGuest ? "🎮 Guest Scores" : "🏆 Leaderboard"}
+        </h2>
         <div style={{ width: 60 }} />
       </div>
 
@@ -115,7 +128,7 @@ export default function LeaderboardScreen() {
         {!loading && !error && entries.length === 0 && (
           <div className="lb-empty">
             <div className="lb-empty-icon">🎯</div>
-            <p>No competitive scores yet for this subject.</p>
+            <p>No scores yet for this subject.</p>
             <p className="lb-empty-sub">Be the first!</p>
           </div>
         )}
@@ -125,8 +138,9 @@ export default function LeaderboardScreen() {
             {entries.map((entry, i) => (
               <div
                 key={i}
-                className={`lb-row${i < 3 ? " lb-row-top" : ""}`}
+                className={`lb-row${!isGuest ? " lb-row-clickable" : ""}${i < 3 ? " lb-row-top" : ""}`}
                 style={{ "--rank-delay": `${i * 0.04}s` }}
+                onClick={!isGuest ? () => setSelectedUser({ id: entry.userId, displayName: entry.displayName, grade: entry.grade, role: "student" }) : undefined}
               >
                 <div className="lb-rank">
                   {i < 3 ? RANK_ICONS[i] : <span className="lb-rank-num">{i + 1}</span>}
@@ -134,12 +148,12 @@ export default function LeaderboardScreen() {
                 <div className="lb-info">
                   <span className="lb-name">{entry.displayName}</span>
                   <span className="lb-grade">
-                    {gradeLabel(entry.grade)}
-                    {formatDuration(entry.durationSecs) && (
+                    {!isGuest && gradeLabel(entry.grade)}
+                    {!isGuest && formatDuration(entry.durationSecs) && (
                       <span className="lb-duration"> · ⏱ {formatDuration(entry.durationSecs)}</span>
                     )}
                     {formatDate(entry.playedAt) && (
-                      <span className="lb-date"> · 📅 {formatDate(entry.playedAt)}</span>
+                      <span className="lb-date">{!isGuest && " · "}📅 {formatDate(entry.playedAt)}</span>
                     )}
                   </span>
                 </div>
@@ -152,6 +166,10 @@ export default function LeaderboardScreen() {
           </div>
         )}
       </div>
+
+      {selectedUser && !isGuest && (
+        <StatsModal viewUser={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
     </div>
   );
 }

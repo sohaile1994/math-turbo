@@ -22,14 +22,26 @@ function generateProblem(category, settings) {
   }
 }
 
+// Returns the leading operand used to detect repeated problems.
+// Returns null for problem types where no clear first number exists.
+function firstNumber(problem) {
+  if (!problem) return null;
+  if (problem.type === "counting")   return problem.count;
+  if (problem.type === "arithmetic") return problem.a;
+  // PEMDAS / algebra: parse the leading digit(s) from the display string
+  const match = problem.displayQuestion?.match(/^(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
 export const ProblemProvider = ({ children, category }) => {
   const settings    = useSettings();
   const { op }      = useGame();
   const { score }   = useScore();
 
-  const settingsRef = useRef(settings);
-  const opRef       = useRef(op);
-  const scoreRef    = useRef(score);
+  const settingsRef  = useRef(settings);
+  const opRef        = useRef(op);
+  const scoreRef     = useRef(score);
+  const lastFirstRef = useRef(null);
 
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { opRef.current = op; }, [op]);
@@ -43,10 +55,22 @@ export const ProblemProvider = ({ children, category }) => {
     ...(override ?? {}),
   });
 
-  const [problem, setProblem] = useState(() => generateProblem(category, buildSettings()));
+  const [problem, setProblem] = useState(() => {
+    const p = generateProblem(category, buildSettings());
+    lastFirstRef.current = firstNumber(p);
+    return p;
+  });
 
   const nextProblem = useCallback((settingsOverride) => {
-    setProblem(generateProblem(category, buildSettings(settingsOverride)));
+    const prev = lastFirstRef.current;
+    let candidate;
+    let tries = 0;
+    do {
+      candidate = generateProblem(category, buildSettings(settingsOverride));
+      tries++;
+    } while (firstNumber(candidate) === prev && tries < 10);
+    lastFirstRef.current = firstNumber(candidate);
+    setProblem(candidate);
   }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

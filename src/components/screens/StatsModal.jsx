@@ -1,21 +1,33 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getUserStats } from "../../lib/scores";
-import { Category } from "../../enums";
+import { setLeaderboardVisibility } from "../../lib/admin";
 
 const SUBJECTS = [
-  { id: Category.COUNTING,   label: "Counting",     emoji: "🔢", gradient: "linear-gradient(135deg,#FF6B6B,#FF8E53)" },
-  { id: Category.ARITHMETIC, label: "Arithmetic",   emoji: "➕", gradient: "linear-gradient(135deg,#4ECDC4,#44A8D0)" },
-  { id: Category.PEMDAS,     label: "Order of Ops", emoji: "📐", gradient: "linear-gradient(135deg,#A78BFA,#EC4899)" },
-  { id: Category.ALGEBRA,    label: "Algebra",      emoji: "🔣", gradient: "linear-gradient(135deg,#F59E0B,#EF4444)" },
+  { id: "counting",     label: "Counting",       emoji: "🔢", gradient: "linear-gradient(135deg,#FF6B6B,#FF8E53)" },
+  { id: "arithmetic_+", label: "Addition",        emoji: "➕", gradient: "linear-gradient(135deg,#4ECDC4,#44A8D0)" },
+  { id: "arithmetic_-", label: "Subtraction",     emoji: "➖", gradient: "linear-gradient(135deg,#A78BFA,#EC4899)" },
+  { id: "arithmetic_×", label: "Multiplication",  emoji: "✖️", gradient: "linear-gradient(135deg,#F59E0B,#EF4444)" },
+  { id: "arithmetic_÷", label: "Division",        emoji: "➗", gradient: "linear-gradient(135deg,#6BCB77,#4D9F53)" },
+  { id: "algebra",      label: "Algebra",         emoji: "🔣", gradient: "linear-gradient(135deg,#FF9F43,#EE5A24)" },
 ];
 
-function gradeLabel(g) { return g === 0 ? "Staff" : `${g}th Grade`; }
+function gradeLabel(g, role) {
+  if (role === "teacher") return "Staff";
+  if (g === 0) return "Kindergarten";
+  const suffix = g === 1 ? "st" : g === 2 ? "nd" : g === 3 ? "rd" : "th";
+  return `${g}${suffix} Grade`;
+}
 
-export default function StatsModal({ onClose }) {
-  const { user }                 = useAuth();
-  const [stats, setStats]        = useState(null);
-  const [loading, setLoading]    = useState(true);
+export default function StatsModal({ onClose, viewUser }) {
+  const { user: authUser, patchUser } = useAuth();
+  const isOwnStats = !viewUser;
+  const user       = viewUser ?? authUser;
+
+  const [stats,   setStats]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [hidden,  setHidden]  = useState(authUser?.hideLeaderboard ?? false);
+  const [saving,  setSaving]  = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -24,6 +36,20 @@ export default function StatsModal({ onClose }) {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [user]);
+
+  async function handlePrivacyToggle() {
+    const next = !hidden;
+    setSaving(true);
+    try {
+      await setLeaderboardVisibility(authUser.id, authUser.grade, next);
+      patchUser({ hideLeaderboard: next });
+      setHidden(next);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -37,7 +63,7 @@ export default function StatsModal({ onClose }) {
           </div>
           <div>
             <div className="stats-name">{user?.displayName}</div>
-            <div className="stats-grade">{user ? gradeLabel(user.grade) : ""}</div>
+            <div className="stats-grade">{user ? gradeLabel(user.grade, user.role) : ""}</div>
           </div>
         </div>
 
@@ -63,6 +89,16 @@ export default function StatsModal({ onClose }) {
               );
             })}
           </div>
+        )}
+
+        {isOwnStats && authUser?.role === "student" && (
+          <button
+            className={`stats-privacy-btn${hidden ? " stats-privacy-hidden" : ""}`}
+            onClick={handlePrivacyToggle}
+            disabled={saving}
+          >
+            {hidden ? "👁️ Hidden from leaderboard" : "👁️ Visible on leaderboard"}
+          </button>
         )}
       </div>
     </div>

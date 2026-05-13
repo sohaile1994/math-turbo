@@ -23,11 +23,17 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const patchUser = (updates) => {
+    const updated = { ...user, ...updates };
+    saveSession(updated);
+    setUser(updated);
+  };
+
   const isTeacher = user?.role === "teacher";
   const isAdmin   = user?.role === "admin";
 
   return (
-    <AuthContext.Provider value={{ user, authReady, loginUser, logoutUser, isTeacher, isAdmin }}>
+    <AuthContext.Provider value={{ user, authReady, loginUser, logoutUser, patchUser, isTeacher, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,10 +5,10 @@ import { Category, GameMode } from "../../enums";
 import StatsModal from "./StatsModal";
 
 const ARITHMETIC_OPS = [
-  { op: "+", label: "Addition",       emoji: "➕", gradient: "linear-gradient(135deg,#4ECDC4,#44A8D0)", glow: "#4ECDC4" },
-  { op: "-", label: "Subtraction",    emoji: "➖", gradient: "linear-gradient(135deg,#A78BFA,#EC4899)", glow: "#A78BFA" },
-  { op: "×", label: "Multiplication", emoji: "✖️", gradient: "linear-gradient(135deg,#F59E0B,#EF4444)", glow: "#F59E0B" },
-  { op: "÷", label: "Division",       emoji: "➗", gradient: "linear-gradient(135deg,#6BCB77,#4D9F53)", glow: "#6BCB77" },
+  { op: "+", label: "Addition",       emoji: "➕", desc: "Add numbers",      gradient: "linear-gradient(135deg,#4ECDC4,#44A8D0)", glow: "#4ECDC4" },
+  { op: "-", label: "Subtraction",    emoji: "➖", desc: "Subtract numbers", gradient: "linear-gradient(135deg,#A78BFA,#EC4899)", glow: "#A78BFA" },
+  { op: "×", label: "Multiplication", emoji: "✖️", desc: "Times tables",     gradient: "linear-gradient(135deg,#F59E0B,#EF4444)", glow: "#F59E0B" },
+  { op: "÷", label: "Division",       emoji: "➗", desc: "Divide numbers",   gradient: "linear-gradient(135deg,#6BCB77,#4D9F53)", glow: "#6BCB77" },
 ];
 
 export default function MainMenu() {
@@ -19,7 +19,7 @@ export default function MainMenu() {
 
   const isCompetitive = selectedMode === GameMode.COMPETITIVE;
 
-  function SubjectCard({ gradient, glow, emoji, label, onClick, delay = 0 }) {
+  function SubjectCard({ gradient, glow, emoji, label, desc, onClick, delay = 0 }) {
     return (
       <button
         className="category-card-2x2"
@@ -29,6 +29,7 @@ export default function MainMenu() {
         <div className="card-inner">
           <div className="cat-emoji-big">{emoji}</div>
           <div className="cat-name-big">{label}</div>
+          <div className="cat-desc-small">{desc}</div>
         </div>
       </button>
     );
@@ -44,7 +45,7 @@ export default function MainMenu() {
         <h1 className="menu-title">
           <span className="title-math">MATH</span>
           <br />
-          <span className="title-blaster">BLASTER</span>
+          <span className="title-blaster">TURBO</span>
         </h1>
         <p className="menu-subtitle">Pick a mode and topic!</p>
 
@@ -100,19 +101,21 @@ export default function MainMenu() {
           glow="#FF6B6B"
           emoji="🔢"
           label="Counting"
+          desc="Count objects & numbers"
           delay={0}
           onClick={() => startGame({ category: Category.COUNTING, mode: selectedMode })}
         />
 
         {/* Middle: 4 arithmetic ops */}
         <div className="arithmetic-grid">
-          {ARITHMETIC_OPS.map(({ op, label, emoji, gradient, glow }, i) => (
+          {ARITHMETIC_OPS.map(({ op, label, emoji, desc, gradient, glow }, i) => (
             <SubjectCard
               key={op}
               gradient={gradient}
               glow={glow}
               emoji={emoji}
               label={label}
+              desc={desc}
               delay={i * 0.06}
               onClick={() => startGame({ category: Category.ARITHMETIC, op, mode: selectedMode })}
             />
@@ -125,6 +128,7 @@ export default function MainMenu() {
           glow="#FF9F43"
           emoji="🔣"
           label="Algebra"
+          desc="Solve for x"
           delay={0.24}
           onClick={() => startGame({ category: Category.ALGEBRA, mode: selectedMode })}
         />

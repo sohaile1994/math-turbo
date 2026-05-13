@@ -6,15 +6,11 @@ export const ScoreProvider = ({ children }) => {
   const [score, setScore]               = useState(0);
   const [scoreBoostLeft, setScoreBoostLeft] = useState(0); // problems left with 2× boost
 
-  /**
-   * Call on correct answer.
-   * @param {number} multiplier  - Grade multiplier (1 – 10)
-   * @param {boolean} doubleCombo - DOUBLE_COMBO booster active (not score related, but passed for context)
-   * @returns {number} points earned this round
-   */
-  const registerCorrect = (multiplier = 1) => {
+  // consecutiveIndex = number of correct answers already in this streak (0-based).
+  // Score per answer = 100 * (1 + consecutiveIndex / 5)
+  const registerCorrect = (consecutiveIndex = 0) => {
     const boostFactor = scoreBoostLeft > 0 ? 2 : 1;
-    const points = Math.round(100 * multiplier * boostFactor);
+    const points = Math.round(100 * (1 + consecutiveIndex / 5) * boostFactor);
     setScore(s => s + points);
     if (scoreBoostLeft > 0) setScoreBoostLeft(b => b - 1);
     return points;

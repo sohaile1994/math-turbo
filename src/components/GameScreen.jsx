@@ -69,15 +69,17 @@ function TierBanner({ tier }) {
 // ── Inner game content ───────────────────────────────────────────────────────
 function GameContent() {
   const { endGame, mode, category, op, startedAt } = useGame();
-  const { score }          = useScore();
-  const { isGameOver }     = useLives();
-  const { isExpired }      = useTimer();
+  const { score }              = useScore();
+  const { isGameOver, lives }  = useLives();
+  const { isExpired }          = useTimer();
   useSettings(); // keep provider in scope
   const { nextProblem } = useProblem();
   const { user }        = useAuth();
 
-  const scoreRef       = useRef(score);
-  const tierRef        = useRef(-1);  // -1 so tier 0 triggers init on mount
+  const scoreRef = useRef(score);
+  const livesRef = useRef(lives);
+  const tierRef    = useRef(-1); // tracks current tier (can go down)
+  const maxTierRef = useRef(0);  // tracks highest tier ever reached; banner only fires here
   const personalBest   = useRef(null); // null = not yet loaded from DB
   const [showSettings, setShowSettings] = useState(false);
   const [tierBanner, setTierBanner]     = useState(null);
@@ -85,6 +87,7 @@ function GameContent() {
   const isCompetitive = mode === GameMode.COMPETITIVE;
 
   useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { livesRef.current = lives; }, [lives]);
 
   // On game start: fetch the player's current personal best for this subject
   // so we know the exact threshold we need to beat before writing to DB.
@@ -100,7 +103,7 @@ function GameContent() {
 
   // Save to leaderboard only when the player beats their personal best.
   useEffect(() => {
-    if (!isCompetitive || !user || score === 0) return;
+    if (!isCompetitive || !user || user.role === "guest" || score === 0) return;
     if (personalBest.current === null) return;
     if (score <= personalBest.current) return;
 
@@ -109,10 +112,14 @@ function GameContent() {
     saveScore(user.id, subject, score, durationSecs).catch(() => {});
   }, [score]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const studentGrade = user?.role === "student" ? (user.grade ?? 9) : 9;
+
   // End game when lives or timer run out
   useEffect(() => {
-    if (isGameOver || isExpired) endGame(scoreRef.current);
-  }, [isGameOver, isExpired, endGame]);
+    if (isGameOver || isExpired) {
+      endGame(scoreRef.current, isGameOver ? 0 : livesRef.current, studentGrade);
+    }
+  }, [isGameOver, isExpired, endGame]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Progressive difficulty (competitive only)
   // Score flows into generators via ProblemContext's scoreRef — no nextProblem call needed here.
@@ -121,16 +128,18 @@ function GameContent() {
     if (!isCompetitive) return;
     const tier = tierFromScore(score);
     if (tier === tierRef.current) return;
-    const prev = tierRef.current;
     tierRef.current = tier;
 
-    if (tier > 0 && prev >= 0) {
+    // Only show the banner when reaching a new all-time-high tier.
+    // Prevents re-showing if score dips below a boundary and climbs back.
+    if (tier > maxTierRef.current) {
+      maxTierRef.current = tier;
       setTierBanner(tier);
       setTimeout(() => setTierBanner(null), 2500);
     }
   }, [score, isCompetitive]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const quit = () => endGame(scoreRef.current);
+  const quit = () => endGame(scoreRef.current, livesRef.current, studentGrade);
 
   return (
     <div className="game-panel">
@@ -154,7 +163,6 @@ function GameContent() {
           {isCompetitive && (
             <span className="competitive-badge">🏆 COMP</span>
           )}
-          <LivesDisplay />
         </div>
       </div>
 
@@ -163,6 +171,7 @@ function GameContent() {
         <SettingsPanel onClose={() => setShowSettings(false)} onQuit={quit} />
       )}
 
+      <LivesDisplay />
       <ScoreDisplay />
       <AnswerFeedback />
       <BoosterNotification />

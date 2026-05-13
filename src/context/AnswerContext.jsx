@@ -8,14 +8,11 @@ import { BoosterType } from "../enums";
 
 const AnswerContext = createContext();
 
-const STREAK_TARGET = 7;
-const STREAK_BONUS  = 1500;
-
 export const AnswerProvider = ({ children }) => {
-  const { problem, nextProblem }                                                  = useProblem();
-  const { registerCorrect, registerWrong, registerBonus, activateScoreBoost }    = useScore();
-  const { multiplier, incrementCombo, resetGrade, activateGradeFreeze }          = useGrade();
-  const { loseLife, gainLife }                                                    = useLives();
+  const { problem, nextProblem }                                         = useProblem();
+  const { registerCorrect, registerWrong, activateScoreBoost }          = useScore();
+  const { incrementCombo, resetGrade, activateGradeFreeze }             = useGrade();
+  const { loseLife, gainLife }                                           = useLives();
 
   const [answer,           setAnswer]           = useState("");
   const [feedback,         setFeedback]         = useState(null);
@@ -38,7 +35,8 @@ export const AnswerProvider = ({ children }) => {
       const isDoubleCombo = problem.booster === BoosterType.DOUBLE_COMBO;
       incrementCombo(isDoubleCombo);
 
-      const pts = registerCorrect(multiplier);
+      // streak is the number of consecutive correct answers BEFORE this one (0-based index)
+      const pts = registerCorrect(streak);
       setPointsEarned(pts);
       setAnswer("");
 
@@ -50,7 +48,7 @@ export const AnswerProvider = ({ children }) => {
             activateGradeFreeze(12);
             break;
           case BoosterType.EXTRA_LIFE:
-            gainLife(); // always adds a heart in both modes
+            gainLife();
             break;
           case BoosterType.SCORE_BOOST:
             activateScoreBoost(5);
@@ -65,35 +63,17 @@ export const AnswerProvider = ({ children }) => {
       }
       setBoosterAwarded(awarded);
       setAttempts(0);
+      setStreak(s => s + 1);
 
-      // ── Streak ──
-      const newStreak = streak + 1;
+      setFeedback("correct");
+      setFeedbackKey((k) => k + 1);
 
-      if (newStreak >= STREAK_TARGET) {
-        const bonus = Math.round(STREAK_BONUS * multiplier);
-        registerBonus(bonus);
-        setStreak(0);
-        setFeedback("streak7");
-        setFeedbackKey((k) => k + 1);
-
-        clearTimeout(feedbackTimerRef.current);
-        feedbackTimerRef.current = setTimeout(() => {
-          setFeedback(null);
-          setPointsEarned(null);
-          setBoosterAwarded(null);
-        }, 3000);
-      } else {
-        setStreak(newStreak);
-        setFeedback("correct");
-        setFeedbackKey((k) => k + 1);
-
-        clearTimeout(feedbackTimerRef.current);
-        feedbackTimerRef.current = setTimeout(() => {
-          setFeedback(null);
-          setPointsEarned(null);
-          setBoosterAwarded(null);
-        }, 2000);
-      }
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = setTimeout(() => {
+        setFeedback(null);
+        setPointsEarned(null);
+        setBoosterAwarded(null);
+      }, 2000);
 
       setTimeout(() => nextProblem(), 80);
       return;
@@ -112,7 +92,7 @@ export const AnswerProvider = ({ children }) => {
       return;
     }
 
-    // Second wrong attempt — now lose a life and show the answer
+    // Second wrong attempt — lose a life and show the answer
     loseLife();
     resetGrade();
     setAttempts(0);

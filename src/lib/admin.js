@@ -1,25 +1,35 @@
 import { tursoQuery, arg } from "./turso";
-import { hashPassword }    from "./auth";
+import { hashPassword, getSchoolYear } from "./auth";
 
-const TABLE_FOR_GRADE = { 6: "users_6", 7: "users_7", 8: "users_8", 9: "users_9" };
-const BASE_ID         = { 6: 1,   7: 51,  8: 101, 9: 151 };
-const MAX_ID          = { 6: 50,  7: 100, 8: 150, 9: 200 };
+const TABLE_FOR_GRADE = {
+  0: "users_k",
+  1: "users_1", 2: "users_2", 3: "users_3", 4: "users_4", 5: "users_5",
+  6: "users_6", 7: "users_7", 8: "users_8", 9: "users_9",
+};
+const BASE_ID = { 0: 501, 1: 601, 2: 701, 3: 801, 4: 901, 5: 1001, 6: 1,  7: 51,  8: 101, 9: 151 };
+const MAX_ID  = { 0: 600, 1: 700, 2: 800, 3: 900, 4: 1000, 5: 1100, 6: 50, 7: 100, 8: 150, 9: 200 };
+
+const GRADE_TABLES_ORDERED = [
+  "users_k", "users_1", "users_2", "users_3", "users_4", "users_5",
+  "users_6", "users_7", "users_8", "users_9",
+];
 
 /** Returns all students from all grade tables, sorted by name within each grade. */
 export async function listStudents() {
-  const data = await tursoQuery([
-    { type: "execute", stmt: { sql: "SELECT id, username, display_name, grade FROM users_6 ORDER BY display_name" } },
-    { type: "execute", stmt: { sql: "SELECT id, username, display_name, grade FROM users_7 ORDER BY display_name" } },
-    { type: "execute", stmt: { sql: "SELECT id, username, display_name, grade FROM users_8 ORDER BY display_name" } },
-    { type: "execute", stmt: { sql: "SELECT id, username, display_name, grade FROM users_9 ORDER BY display_name" } },
-  ]);
-  return [0, 1, 2, 3].flatMap((i) => {
+  const data = await tursoQuery(
+    GRADE_TABLES_ORDERED.map((t) => ({
+      type: "execute",
+      stmt: { sql: `SELECT id, username, display_name, grade, school_year FROM ${t} ORDER BY display_name` },
+    }))
+  );
+  return GRADE_TABLES_ORDERED.flatMap((_, i) => {
     const rows = data.results[i]?.response?.result?.rows ?? [];
     return rows.map((r) => ({
       id:          Number(r[0].value),
       username:    r[1].value,
       displayName: r[2].value,
       grade:       Number(r[3].value),
+      schoolYear:  r[4]?.value ?? "",
     }));
   });
 }
@@ -41,23 +51,25 @@ export async function addStudent(displayName, grade, username) {
   const newId = currentMax + 1;
   if (newId > maxSlot) throw new Error(`Grade ${grade} is at capacity (${maxSlot - BASE_ID[grade] + 1} max)`);
 
-  const hash = await hashPassword("Zenith123$");
+  const hash       = await hashPassword("Zenith123$");
+  const schoolYear = getSchoolYear();
   await tursoQuery([
     {
       type: "execute",
       stmt: {
-        sql: `INSERT INTO ${table} (id, username, display_name, grade, password_hash) VALUES (?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO ${table} (id, username, display_name, grade, school_year, password_hash) VALUES (?, ?, ?, ?, ?, ?)`,
         args: [
           arg("integer", newId),
           arg("text",    username),
           arg("text",    displayName),
           arg("integer", grade),
+          arg("text",    schoolYear),
           arg("text",    hash),
         ],
       },
     },
   ]);
-  return { id: newId, username, displayName, grade };
+  return { id: newId, username, displayName, grade, schoolYear };
 }
 
 /** Remove a student and wipe their scores. */
@@ -183,6 +195,21 @@ export async function updateStudent(userId, grade, displayName, username, newPas
       },
     ]);
   }
+}
+
+/** Toggle a student's leaderboard visibility. hide=true removes them from public rankings. */
+export async function setLeaderboardVisibility(userId, grade, hide) {
+  const table = TABLE_FOR_GRADE[grade];
+  if (!table) throw new Error(`Invalid grade: ${grade}`);
+  await tursoQuery([
+    {
+      type: "execute",
+      stmt: {
+        sql: `UPDATE ${table} SET hide_leaderboard = ? WHERE id = ?`,
+        args: [arg("integer", hide ? 1 : 0), arg("integer", userId)],
+      },
+    },
+  ]);
 }
 
 /** Reset a student's password back to the default. */
