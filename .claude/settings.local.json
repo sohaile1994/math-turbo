@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vite:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(rm:*)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(python -c ':*)",
+      "Bash(node:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3:*)",
+      "Bash(cat new-styles.css)",
+      "Bash(rm new-styles.css)",
+      "Bash(git restore *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\sohai\\\\OneDrive\\\\Documents\\\\MyWebsitesGitRepository\\\\math-turbo\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\sohai\\\\OneDrive\\\\Documents\\\\MyWebsitesGitRepository\\\\math-turbo\\\\src\" -Recurse -File | ForEach-Object { $_.FullName.Replace\\('C:\\\\Users\\\\sohai\\\\OneDrive\\\\Documents\\\\MyWebsitesGitRepository\\\\math-turbo\\\\', ''\\) } | Sort-Object)"
+    ]
+  }
+}
