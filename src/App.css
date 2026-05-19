@@ -1040,53 +1040,65 @@ button {
 .go-guest-save {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  gap: 10px;
   width: 100%;
-  max-width: 300px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-width: 320px;
+  box-sizing: border-box;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(139,92,246,0.15);
+  border: 2px solid var(--purple);
+  box-shadow: 0 0 20px rgba(139,92,246,0.35), 0 0 40px rgba(139,92,246,0.12);
+  animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1), guestPulse 2.5s ease-in-out 0.4s infinite;
+}
+@keyframes guestPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.35), 0 0 40px rgba(139,92,246,0.12); }
+  50%       { box-shadow: 0 0 28px rgba(139,92,246,0.6),  0 0 56px rgba(139,92,246,0.22); }
 }
 .go-guest-save-label {
   font-family: "Fredoka One", sans-serif;
-  font-size: 0.9rem;
-  color: var(--muted);
+  font-size: 1.05rem;
+  color: var(--text);
   margin: 0;
   text-align: center;
+  letter-spacing: 0.01em;
 }
 .go-guest-input-row {
   display: flex;
   gap: 8px;
   width: 100%;
+  box-sizing: border-box;
 }
 .go-guest-input {
   flex: 1;
-  padding: 9px 12px;
+  min-width: 0;
+  padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.07);
-  color: #fff;
+  border: 2px solid rgba(139,92,246,0.5);
+  background: #fff;
+  color: var(--text);
   font-family: "Nunito", sans-serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   outline: none;
   transition: border-color 0.2s;
 }
-.go-guest-input:focus { border-color: var(--purple); }
-.go-guest-input::placeholder { color: rgba(255,255,255,0.3); }
+.go-guest-input:focus {
+  border-color: var(--purple);
+}
+.go-guest-input::placeholder { color: var(--muted); }
 .go-guest-submit-btn {
   background: linear-gradient(135deg, var(--purple), var(--blue));
   border: none;
   border-radius: 10px;
   color: #fff;
   font-family: "Fredoka One", sans-serif;
-  font-size: 0.95rem;
-  padding: 9px 18px;
+  font-size: 1rem;
+  padding: 10px 20px;
   transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
 }
-.go-guest-submit-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.go-guest-submit-btn:hover:not(:disabled) { transform: translateY(-2px); }
 .go-guest-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .go-guest-error {
   font-family: "Nunito", sans-serif;

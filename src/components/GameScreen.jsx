@@ -94,7 +94,7 @@ function GameContent() {
   useEffect(() => {
     if (!isCompetitive || !user) return;
     getUserStats(user.id)
-      .then((stats) => { personalBest.current = stats[category] ?? 0; })
+      .then((stats) => { personalBest.current = stats[subject] ?? 0; })
       .catch(() => { personalBest.current = 0; });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

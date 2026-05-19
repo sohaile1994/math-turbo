@@ -55,7 +55,7 @@ export default function GameOver() {
   useEffect(() => {
     if (isGuest || mode !== GameMode.COMPETITIVE || !user) return;
     const durationSecs = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
-    saveScore(user.id, category, finalScore, durationSecs)
+    saveScore(user.id, subjectKey(category, op), finalScore, durationSecs)
       .then(() => setSaved(true))
       .catch(console.error);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -143,7 +143,7 @@ export default function GameOver() {
       {/* Guest score save */}
       {isGuest && !guestSaved && (
         <div className="go-guest-save">
-          <p className="go-guest-save-label">Want to save your score to the leaderboard?</p>
+          <p className="go-guest-save-label">🏆 Enter your name to save your score!</p>
           <div className="go-guest-input-row">
             <input
               className="go-guest-input"
