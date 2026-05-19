@@ -4,11 +4,32 @@ import { ALL_USERS_SQL } from "./auth";
 const SCORES_INIT_KEY       = "math_scores_init_v4";
 const GUEST_SCORES_INIT_KEY = "math_guest_scores_init_v1";
 
-// ─── Profanity filter ─────────────────────────────────────────────────────────
+// ─── Profanity / inappropriate content filter ─────────────────────────────────
 const BAD_WORDS = [
+  // Profanity
   "fuck","shit","bitch","cunt","dick","pussy","cock","ass","bastard",
   "whore","slut","piss","nigger","nigga","faggot","fag","retard",
   "asshole","jackass","dumbass","bullshit","motherfucker","fucker",
+  "damn","crap","prick","twat","wanker","boner","dildo",
+  "tits","boobs","boob","titty","titties","vagina","penis","balls",
+  "scrotum","anus","butthole","cum","jizz","spunk","bdsm",
+  // Sexual content
+  "porn","porno","pornography","hentai","nude","nudity","naked",
+  "sex","sexy","sexual","intercourse","orgasm","erection","horny",
+  "masturbate","masturbation","blowjob","handjob","anal","oral",
+  "fetish","kink","kinky","rape","molest","grope","fondle",
+  "stripper","escort","prostitute","hooker","onlyfans",
+  // Child safety
+  "pedophile","pedophilia","paedophile","paedophilia","pedo",
+  "childporn","cp","grooming","lolicon","shotacon",
+  // Violence / hate
+  "kill","murder","suicide","terrorist","terrorism","genocide",
+  "lynch","jihad","nazi","hitler","kkk","kkkmember",
+  // Drugs
+  "cocaine","heroin","meth","crack","weed","marijuana","drug","drugs",
+  "stoner","drugdealer",
+  // Other
+  "meat","flesh","gore",
 ];
 
 export function containsProfanity(text) {
