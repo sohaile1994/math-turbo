@@ -1,5 +1,6 @@
 import { tursoQuery, arg } from "./turso";
 import { ALL_USERS_SQL } from "./auth";
+import { decryptField } from "./fieldCrypto";
 
 const SCORES_INIT_KEY       = "math_scores_init_v4";
 const GUEST_SCORES_INIT_KEY = "math_guest_scores_init_v1";
@@ -114,14 +115,18 @@ export async function getLeaderboard(subject) {
     },
   ]);
   const rows = data.results[0]?.response?.result?.rows ?? [];
-  return rows.map((r) => ({
-    displayName:  r[0].value,
-    grade:        Number(r[1].value),
-    score:        Number(r[2].value),
-    durationSecs: Number(r[3].value ?? 0),
-    playedAt:     Number(r[4].value ?? 0),
-    userId:       Number(r[5].value),
-  }));
+  const result = [];
+  for (const r of rows) {
+    result.push({
+      displayName:  await decryptField(r[0].value),
+      grade:        Number(r[1].value),
+      score:        Number(r[2].value),
+      durationSecs: Number(r[3].value ?? 0),
+      playedAt:     Number(r[4].value ?? 0),
+      userId:       Number(r[5].value),
+    });
+  }
+  return result;
 }
 
 export async function getUserStats(userId) {

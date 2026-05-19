@@ -1,7 +1,9 @@
 import { tursoQuery, arg } from "./turso";
+import { encryptField, encryptUsername, decryptField, isEncrypted } from "./fieldCrypto";
 
-const DB_INIT_KEY = "math_db_init_v10";
-const SESSION_KEY = "math_session";
+const DB_INIT_KEY        = "math_db_init_v10";
+const SESSION_KEY        = "math_session";
+const CRYPTO_MIGRATION_KEY = "math_crypto_fields_v1";
 
 export function getSchoolYear() {
   const now  = new Date();
@@ -56,21 +58,27 @@ export async function hashPassword(password) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeInserts(table, gradeNum, users, hash, schoolYear) {
-  return users.map((u) => ({
-    type: "execute",
-    stmt: {
-      sql: `INSERT OR IGNORE INTO ${table} (id, username, display_name, grade, school_year, password_hash) VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [
-        arg("integer", u.id),
-        arg("text",    u.username),
-        arg("text",    u.name),
-        arg("integer", gradeNum),
-        arg("text",    schoolYear),
-        arg("text",    hash),
-      ],
-    },
-  }));
+async function makeEncryptedInserts(table, gradeNum, users, hash, schoolYear) {
+  const inserts = [];
+  for (const u of users) {
+    const encUsername    = await encryptUsername(u.username);
+    const encDisplayName = await encryptField(u.name);
+    inserts.push({
+      type: "execute",
+      stmt: {
+        sql: `INSERT OR IGNORE INTO ${table} (id, username, display_name, grade, school_year, password_hash) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [
+          arg("integer", u.id),
+          arg("text",    encUsername),
+          arg("text",    encDisplayName),
+          arg("integer", gradeNum),
+          arg("text",    schoolYear),
+          arg("text",    hash),
+        ],
+      },
+    });
+  }
+  return inserts;
 }
 
 const TABLE_SCHEMA = (name) =>
@@ -113,9 +121,58 @@ export const ALL_USERS_SQL =
 const ADMIN_USERNAME = "admin@zenithacademy.org";
 const ADMIN_PASSWORD = "Zenith123$";
 
+// ─── Field encryption migration ───────────────────────────────────────────────
+
+const ALL_USER_TABLES = [
+  "users_k","users_1","users_2","users_3","users_4","users_5",
+  "users_6","users_7","users_8","users_9","users_teacher",
+];
+
+async function migratePlaintextFields() {
+  if (localStorage.getItem(CRYPTO_MIGRATION_KEY)) return;
+
+  for (const table of ALL_USER_TABLES) {
+    let rows;
+    try {
+      const data = await tursoQuery([{
+        type: "execute",
+        stmt: { sql: `SELECT id, username, display_name FROM ${table}` },
+      }]);
+      rows = data.results[0]?.response?.result?.rows ?? [];
+    } catch { continue; } // table may not exist yet
+
+    const updates = [];
+    for (const row of rows) {
+      const id          = Number(row[0].value);
+      const username    = row[1].value;
+      const displayName = row[2].value;
+      if (isEncrypted(username) && isEncrypted(displayName)) continue;
+      updates.push({
+        type: "execute",
+        stmt: {
+          sql: `UPDATE ${table} SET username = ?, display_name = ? WHERE id = ?`,
+          args: [
+            arg("text",    isEncrypted(username)    ? username    : await encryptUsername(username)),
+            arg("text",    isEncrypted(displayName) ? displayName : await encryptField(displayName)),
+            arg("integer", id),
+          ],
+        },
+      });
+    }
+
+    for (let i = 0; i < updates.length; i += 20) {
+      await tursoQuery(updates.slice(i, i + 20));
+    }
+  }
+
+  localStorage.setItem(CRYPTO_MIGRATION_KEY, "1");
+}
+
 // ─── DB init ──────────────────────────────────────────────────────────────────
 
 export async function initDB() {
+  await migratePlaintextFields();
+
   if (localStorage.getItem(DB_INIT_KEY)) return;
 
   // Detect which grade tables already exist
@@ -143,12 +200,12 @@ export async function initDB() {
       { type: "execute", stmt: { sql: TABLE_SCHEMA("users_5") } },
     ]);
     const k5Inserts = [
-      ...makeInserts("users_k", 0, SEED_GRADE_K, hash, schoolYear),
-      ...makeInserts("users_1", 1, SEED_GRADE1,   hash, schoolYear),
-      ...makeInserts("users_2", 2, SEED_GRADE2,   hash, schoolYear),
-      ...makeInserts("users_3", 3, SEED_GRADE3,   hash, schoolYear),
-      ...makeInserts("users_4", 4, SEED_GRADE4,   hash, schoolYear),
-      ...makeInserts("users_5", 5, SEED_GRADE5,   hash, schoolYear),
+      ...(await makeEncryptedInserts("users_k", 0, SEED_GRADE_K, hash, schoolYear)),
+      ...(await makeEncryptedInserts("users_1", 1, SEED_GRADE1,  hash, schoolYear)),
+      ...(await makeEncryptedInserts("users_2", 2, SEED_GRADE2,  hash, schoolYear)),
+      ...(await makeEncryptedInserts("users_3", 3, SEED_GRADE3,  hash, schoolYear)),
+      ...(await makeEncryptedInserts("users_4", 4, SEED_GRADE4,  hash, schoolYear)),
+      ...(await makeEncryptedInserts("users_5", 5, SEED_GRADE5,  hash, schoolYear)),
     ];
     if (k5Inserts.length) await tursoQuery(k5Inserts);
   }
@@ -170,10 +227,10 @@ export async function initDB() {
         },
       },
     ]);
-    await tursoQuery(makeInserts("users_6", 6, SEED_GRADE6, hash, schoolYear));
-    await tursoQuery(makeInserts("users_7", 7, SEED_GRADE7, hash, schoolYear));
-    await tursoQuery(makeInserts("users_8", 8, SEED_GRADE8, hash, schoolYear));
-    await tursoQuery(makeInserts("users_9", 9, SEED_GRADE9, hash, schoolYear));
+    await tursoQuery(await makeEncryptedInserts("users_6", 6, SEED_GRADE6, hash, schoolYear));
+    await tursoQuery(await makeEncryptedInserts("users_7", 7, SEED_GRADE7, hash, schoolYear));
+    await tursoQuery(await makeEncryptedInserts("users_8", 8, SEED_GRADE8, hash, schoolYear));
+    await tursoQuery(await makeEncryptedInserts("users_9", 9, SEED_GRADE9, hash, schoolYear));
   }
 
   // Add new columns to tables that existed before this init run.
@@ -224,8 +281,10 @@ export async function login(rawUsername, rawPassword) {
     if (hash === await hashPassword(ADMIN_PASSWORD)) {
       return { id: 0, displayName: "Administrator", grade: 0, username: ADMIN_USERNAME, role: "admin" };
     }
-    return null; // wrong password for admin
+    return null;
   }
+
+  const encUsername = await encryptUsername(username);
 
   const data = await tursoQuery([
     {
@@ -233,9 +292,9 @@ export async function login(rawUsername, rawPassword) {
       stmt: {
         sql: `SELECT id, display_name, grade, username, role, hide_leaderboard
               FROM (${ALL_USERS_SQL})
-              WHERE LOWER(username) = ? AND password_hash = ?
+              WHERE username = ? AND password_hash = ?
               LIMIT 1`,
-        args: [arg("text", username), arg("text", hash)],
+        args: [arg("text", encUsername), arg("text", hash)],
       },
     },
   ]);
@@ -243,9 +302,9 @@ export async function login(rawUsername, rawPassword) {
   if (!row) return null;
   return {
     id:              Number(row[0].value),
-    displayName:     row[1].value,
+    displayName:     await decryptField(row[1].value),
     grade:           Number(row[2].value),
-    username:        row[3].value,
+    username:        await decryptField(row[3].value),
     role:            row[4]?.value ?? "student",
     hideLeaderboard: Number(row[5]?.value ?? 0) === 1,
   };
@@ -253,18 +312,19 @@ export async function login(rawUsername, rawPassword) {
 
 export async function resetPassword(username, authCode, newPassword) {
   if (authCode !== "Viole1990%") throw new Error("Invalid admin code");
-  const newHash = await hashPassword(newPassword);
+  const newHash     = await hashPassword(newPassword);
+  const encUsername = await encryptUsername(username.trim());
   await tursoQuery([
-    { type: "execute", stmt: { sql: "UPDATE users_k SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_1 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_2 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_3 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_4 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_5 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_6 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_7 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_8 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
-    { type: "execute", stmt: { sql: "UPDATE users_9 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", username)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_k SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_1 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_2 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_3 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_4 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_5 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_6 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_7 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_8 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
+    { type: "execute", stmt: { sql: "UPDATE users_9 SET password_hash = ? WHERE username = ?", args: [arg("text", newHash), arg("text", encUsername)] } },
   ]);
 }
 

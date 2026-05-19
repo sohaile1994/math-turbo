@@ -1,5 +1,6 @@
 import { tursoQuery, arg } from "./turso";
 import { hashPassword, getSchoolYear } from "./auth";
+import { encryptField, encryptUsername, decryptField } from "./fieldCrypto";
 
 const TABLE_FOR_GRADE = {
   0: "users_k",
@@ -22,16 +23,20 @@ export async function listStudents() {
       stmt: { sql: `SELECT id, username, display_name, grade, school_year FROM ${t} ORDER BY display_name` },
     }))
   );
-  return GRADE_TABLES_ORDERED.flatMap((_, i) => {
+  const students = [];
+  for (let i = 0; i < GRADE_TABLES_ORDERED.length; i++) {
     const rows = data.results[i]?.response?.result?.rows ?? [];
-    return rows.map((r) => ({
-      id:          Number(r[0].value),
-      username:    r[1].value,
-      displayName: r[2].value,
-      grade:       Number(r[3].value),
-      schoolYear:  r[4]?.value ?? "",
-    }));
-  });
+    for (const r of rows) {
+      students.push({
+        id:          Number(r[0].value),
+        username:    await decryptField(r[1].value),
+        displayName: await decryptField(r[2].value),
+        grade:       Number(r[3].value),
+        schoolYear:  r[4]?.value ?? "",
+      });
+    }
+  }
+  return students;
 }
 
 /**
@@ -51,8 +56,11 @@ export async function addStudent(displayName, grade, username) {
   const newId = currentMax + 1;
   if (newId > maxSlot) throw new Error(`Grade ${grade} is at capacity (${maxSlot - BASE_ID[grade] + 1} max)`);
 
-  const hash       = await hashPassword("Zenith123$");
-  const schoolYear = getSchoolYear();
+  const hash         = await hashPassword("Zenith123$");
+  const schoolYear   = getSchoolYear();
+  const encUsername  = await encryptUsername(username);
+  const encName      = await encryptField(displayName);
+
   await tursoQuery([
     {
       type: "execute",
@@ -60,8 +68,8 @@ export async function addStudent(displayName, grade, username) {
         sql: `INSERT INTO ${table} (id, username, display_name, grade, school_year, password_hash) VALUES (?, ?, ?, ?, ?, ?)`,
         args: [
           arg("integer", newId),
-          arg("text",    username),
-          arg("text",    displayName),
+          arg("text",    encUsername),
+          arg("text",    encName),
           arg("integer", grade),
           arg("text",    schoolYear),
           arg("text",    hash),
@@ -90,11 +98,15 @@ export async function listTeachers() {
     { type: "execute", stmt: { sql: "SELECT id, username, display_name FROM users_teacher ORDER BY display_name" } },
   ]);
   const rows = data.results[0]?.response?.result?.rows ?? [];
-  return rows.map((r) => ({
-    id:          Number(r[0].value),
-    username:    r[1].value,
-    displayName: r[2].value,
-  }));
+  const teachers = [];
+  for (const r of rows) {
+    teachers.push({
+      id:          Number(r[0].value),
+      username:    await decryptField(r[1].value),
+      displayName: await decryptField(r[2].value),
+    });
+  }
+  return teachers;
 }
 
 /** Add a new teacher. Default password is Zenith123$. */
@@ -105,7 +117,10 @@ export async function addTeacher(displayName, username) {
   const currentMax = Number(idData.results[0]?.response?.result?.rows?.[0]?.[0]?.value ?? 200);
   const newId = currentMax + 1;
 
-  const hash = await hashPassword("Zenith123$");
+  const hash        = await hashPassword("Zenith123$");
+  const encUsername = await encryptUsername(username);
+  const encName     = await encryptField(displayName);
+
   await tursoQuery([
     {
       type: "execute",
@@ -113,8 +128,8 @@ export async function addTeacher(displayName, username) {
         sql: "INSERT INTO users_teacher (id, username, display_name, grade, password_hash) VALUES (?, ?, ?, ?, ?)",
         args: [
           arg("integer", newId),
-          arg("text",    username),
-          arg("text",    displayName),
+          arg("text",    encUsername),
+          arg("text",    encName),
           arg("integer", 0),
           arg("text",    hash),
         ],
@@ -126,6 +141,9 @@ export async function addTeacher(displayName, username) {
 
 /** Update a teacher's name and/or email. Optionally change password. */
 export async function updateTeacher(userId, displayName, username, newPassword) {
+  const encUsername = await encryptUsername(username);
+  const encName     = await encryptField(displayName);
+
   if (newPassword) {
     const hash = await hashPassword(newPassword);
     await tursoQuery([
@@ -133,7 +151,7 @@ export async function updateTeacher(userId, displayName, username, newPassword) 
         type: "execute",
         stmt: {
           sql: "UPDATE users_teacher SET display_name = ?, username = ?, password_hash = ? WHERE id = ?",
-          args: [arg("text", displayName), arg("text", username), arg("text", hash), arg("integer", userId)],
+          args: [arg("text", encName), arg("text", encUsername), arg("text", hash), arg("integer", userId)],
         },
       },
     ]);
@@ -143,7 +161,7 @@ export async function updateTeacher(userId, displayName, username, newPassword) 
         type: "execute",
         stmt: {
           sql: "UPDATE users_teacher SET display_name = ?, username = ? WHERE id = ?",
-          args: [arg("text", displayName), arg("text", username), arg("integer", userId)],
+          args: [arg("text", encName), arg("text", encUsername), arg("integer", userId)],
         },
       },
     ]);
@@ -173,6 +191,9 @@ export async function updateStudent(userId, grade, displayName, username, newPas
   const table = TABLE_FOR_GRADE[grade];
   if (!table) throw new Error(`Invalid grade: ${grade}`);
 
+  const encUsername = await encryptUsername(username);
+  const encName     = await encryptField(displayName);
+
   if (newPassword) {
     const hash = await hashPassword(newPassword);
     await tursoQuery([
@@ -180,7 +201,7 @@ export async function updateStudent(userId, grade, displayName, username, newPas
         type: "execute",
         stmt: {
           sql: `UPDATE ${table} SET display_name = ?, username = ?, password_hash = ? WHERE id = ?`,
-          args: [arg("text", displayName), arg("text", username), arg("text", hash), arg("integer", userId)],
+          args: [arg("text", encName), arg("text", encUsername), arg("text", hash), arg("integer", userId)],
         },
       },
     ]);
@@ -190,7 +211,7 @@ export async function updateStudent(userId, grade, displayName, username, newPas
         type: "execute",
         stmt: {
           sql: `UPDATE ${table} SET display_name = ?, username = ? WHERE id = ?`,
-          args: [arg("text", displayName), arg("text", username), arg("integer", userId)],
+          args: [arg("text", encName), arg("text", encUsername), arg("integer", userId)],
         },
       },
     ]);
