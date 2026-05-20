@@ -29,6 +29,7 @@ A gamified math practice app for students in Kindergarten through Grade 9. Stude
 - **Leaderboard** — Per-subject rankings with rank badges, grade labels, session duration, and play date
 - **Role-based access** — Student, Guest, Teacher, and Admin roles with separate dashboards
 - **Guest mode** — Play without an account; scores post to a guest-only leaderboard
+- **Student privacy** — Usernames and display names for all students and teachers are encrypted at rest in the database using AES-256-GCM; passwords are stored as SHA-256 hashes
 
 ---
 
@@ -41,7 +42,7 @@ A gamified math practice app for students in Kindergarten through Grade 9. Stude
 | Animation | GSAP 3 |
 | Icons | React Icons 5 |
 | Database | Turso (SQLite over HTTP) |
-| Auth | Custom session auth, SHA-256 password hashing |
+| Auth | Custom session auth, SHA-256 password hashing, AES-256-GCM field encryption |
 | Hosting | Netlify (recommended) |
 
 ---
@@ -166,6 +167,8 @@ math-turbo/
 ## Database
 
 Math-Turbo uses [Turso](https://turso.tech) (SQLite over HTTP). The app initialises its own schema on first run using versioned init keys, so no manual migration is needed.
+
+All student and teacher **usernames** and **display names** are encrypted with AES-256-GCM before being written to the database. Passwords are never stored in plaintext — only their SHA-256 hash is saved. Existing plaintext records are automatically migrated to encrypted form on first load.
 
 ### Tables
 

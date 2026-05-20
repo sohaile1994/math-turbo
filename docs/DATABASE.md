@@ -17,19 +17,19 @@ VITE_TURSO_TOKEN=your-auth-token
 
 ## Tables
 
-### `users_student`
+### `users_k` / `users_1` … `users_9`
 
-Stores student accounts.
+One table per grade stores student accounts (K = `users_k`, Grade 1 = `users_1`, … Grade 9 = `users_9`).
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | INTEGER PK | Auto-increment |
-| `email` | TEXT UNIQUE | Login identifier |
-| `password_hash` | TEXT | SHA-256 hash |
-| `display_name` | TEXT | Shown in-game and on leaderboard |
+| `id` | INTEGER PK | Manually assigned; ranges are grade-specific |
+| `username` | TEXT UNIQUE | **AES-256-GCM encrypted** (deterministic IV for SQL lookup) |
+| `display_name` | TEXT | **AES-256-GCM encrypted** (random IV) |
 | `grade` | INTEGER | 0 = Kindergarten, 1–9 = Grade 1–9 |
-| `teacher_id` | INTEGER | FK → `users_teacher.id` |
-| `created_at` | TEXT | ISO timestamp |
+| `school_year` | TEXT | e.g. `2024-2025` |
+| `hide_leaderboard` | INTEGER | `1` = opt out of leaderboard display |
+| `password_hash` | TEXT | SHA-256 hash |
 
 ---
 
@@ -39,25 +39,17 @@ Stores teacher accounts.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | INTEGER PK | Auto-increment |
-| `email` | TEXT UNIQUE | Login identifier |
+| `id` | INTEGER PK | Auto-assigned |
+| `username` | TEXT UNIQUE | **AES-256-GCM encrypted** (deterministic IV for SQL lookup) |
+| `display_name` | TEXT | **AES-256-GCM encrypted** (random IV) |
+| `grade` | INTEGER | Always `0` for teachers |
 | `password_hash` | TEXT | SHA-256 hash |
-| `display_name` | TEXT | |
-| `created_at` | TEXT | ISO timestamp |
 
 ---
 
 ### `users_admin`
 
-Stores admin accounts.
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | INTEGER PK | Auto-increment |
-| `email` | TEXT UNIQUE | Login identifier |
-| `password_hash` | TEXT | SHA-256 hash |
-| `display_name` | TEXT | |
-| `created_at` | TEXT | ISO timestamp |
+The admin account is hardcoded in `src/lib/auth.js` and is **not stored in the database**.
 
 ---
 
@@ -93,6 +85,22 @@ A special `init_keys` table tracks which schema versions have already been appli
 
 ---
 
+## Field Encryption
+
+All student and teacher PII (`username` and `display_name`) is encrypted at rest using **AES-256-GCM** via the Web Crypto API (`src/lib/fieldCrypto.js`).
+
+| Field | Scheme | Why |
+|---|---|---|
+| `username` | Deterministic AES-256-GCM (fixed IV) | Must produce the same ciphertext every time so `WHERE username = ?` lookups work |
+| `display_name` | Probabilistic AES-256-GCM (random IV) | Different ciphertext per write — stronger privacy for names |
+| `password_hash` | SHA-256 (one-way hash) | Passwords are never stored in any recoverable form |
+
+The encryption key is derived with PBKDF2 (SHA-256, 50 000 iterations) from a compile-time secret. This provides **database-at-rest obscuration** — anyone with direct DB access sees only ciphertext.
+
+On first load the app runs a migration that re-encrypts any plaintext rows left over from before this feature was added. Migration state is tracked in `localStorage` under `math_crypto_fields_v1`.
+
+---
+
 ## Local Storage
 
 Some state is persisted in the browser's `localStorage` to survive page refreshes:
@@ -102,4 +110,4 @@ Some state is persisted in the browser's `localStorage` to survive page refreshe
 | `math_turbo_session` | Serialised user session object (role, name, grade) |
 | `math_turbo_settings` | Player settings (difficulty preferences) |
 
-No sensitive data is stored unprotected — passwords are only ever sent to Turso as hashes.
+No sensitive data is stored unprotected — passwords are stored only as SHA-256 hashes, and all student/teacher names and usernames are AES-256-GCM encrypted before being written to the database.
