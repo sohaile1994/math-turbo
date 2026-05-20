@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Student/teacher seed data — contains PII, never committed
+src/lib/seedData.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

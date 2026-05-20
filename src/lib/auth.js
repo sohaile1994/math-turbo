@@ -1,5 +1,9 @@
 import { tursoQuery, arg } from "./turso";
 import { encryptField, encryptUsername, decryptField, isEncrypted } from "./fieldCrypto";
+import {
+  SEED_GRADE_K, SEED_GRADE1, SEED_GRADE2, SEED_GRADE3, SEED_GRADE4,
+  SEED_GRADE5,  SEED_GRADE6, SEED_GRADE7, SEED_GRADE8, SEED_GRADE9,
+} from "./seedData";
 
 const DB_INIT_KEY        = "math_db_init_v10";
 const SESSION_KEY        = "math_session";
@@ -35,26 +39,7 @@ export async function hashPassword(password) {
 //   Grade 9  →  151 –  200
 //   Teacher  →  201+  (auto-assigned from users_teacher MAX)
 // Username = email prefix before @zenithacademy.org (or custom if no email)
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
-
-// student seed data removed from history
+// Seed arrays are imported from ./seedData (gitignored — not in the repo).
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
