@@ -119,7 +119,7 @@ export const ALL_USERS_SQL =
 
 // Hardcoded administrator — not stored in any DB table
 const ADMIN_USERNAME = "admin@zenithacademy.org";
-const ADMIN_PASSWORD = "Zenith123$";
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
 // ─── Field encryption migration ───────────────────────────────────────────────
 
@@ -311,7 +311,7 @@ export async function login(rawUsername, rawPassword) {
 }
 
 export async function resetPassword(username, authCode, newPassword) {
-  if (authCode !== "Viole1990%") throw new Error("Invalid admin code");
+  if (authCode !== import.meta.env.VITE_RESET_CODE) throw new Error("Invalid admin code");
   const newHash     = await hashPassword(newPassword);
   const encUsername = await encryptUsername(username.trim());
   await tursoQuery([

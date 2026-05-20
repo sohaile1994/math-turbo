@@ -2,7 +2,7 @@
 // The key lives in client JS — this provides DB-at-rest obscuration,
 // not cryptographic secrecy against an attacker who has the source code.
 
-const SECRET = "ZenithMathTurbo-2024-FieldKey!";
+const SECRET = import.meta.env.VITE_FIELD_KEY;
 const SALT   = new Uint8Array([90,105,110,100,77,84,50,48,50,52,75,101,121,83,108,116]);
 // Fixed 12-byte IV used only for username so the same email always produces
 // the same ciphertext, enabling SQL equality lookup (WHERE username = ?).

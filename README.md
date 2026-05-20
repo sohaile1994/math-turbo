@@ -85,6 +85,9 @@ Open `http://localhost:5173` in your browser.
 |---|---|
 | `VITE_TURSO_URL` | Your Turso database URL (`https://your-db.turso.io`) |
 | `VITE_TURSO_TOKEN` | Your Turso auth token |
+| `VITE_FIELD_KEY` | AES-256-GCM key material for student/teacher field encryption — must stay consistent across deployments |
+| `VITE_ADMIN_PASSWORD` | Password for the built-in admin account |
+| `VITE_RESET_CODE` | Auth code required to reset a student password |
 
 Copy `.env.local.example` to `.env.local` for local development. For Netlify deployments, set the same variables in the Netlify dashboard under **Site settings > Environment variables**.
 
